@@ -1,12 +1,13 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'; // Добавили AnimatePresence
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiLogOut, FiSend, FiKey } from 'react-icons/fi';
 import { supabase } from './supabaseClient';
 import ParticlesBackground from './components/ParticlesBackground';
+import DashboardPage from './pages/DashboardPage'; // Импортируем DashboardPage
 
-// --- Styled Components и ключевые кадры ---
+// --- Styled Components и ключевые кадры (для AuthPage и AppContainer) ---
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -20,12 +21,12 @@ const AppContainer = styled(motion.div)`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 0; 
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: ${gradientAnimation} 15s ease infinite;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden; 
   perspective: 1200px;
 
   &::before {
@@ -42,6 +43,18 @@ const AppContainer = styled(motion.div)`
     pointer-events: none;
     z-index: 0; 
   }
+`;
+
+const AuthPageWrapper = styled(motion.div)`
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
 `;
 
 const StyledAuthCard = styled(motion.div)`
@@ -181,14 +194,11 @@ const SubmitButton = styled(motion.button)`
   box-shadow: 0 5px 20px rgba(231, 60, 126, 0.25);
   background-size: 200% auto;
   margin-top: 10px;
-  position: relative; // Для AnimatePresence
-  overflow: hidden;   // Для AnimatePresence
+  position: relative; 
+  overflow: hidden;
 
-  // Убираем эффекты hover/active когда кнопка disabled (loading)
-  // Они уже частично обрабатываются :not(:disabled), но для большей надежности:
   ${props => props.disabled && `
     cursor: not-allowed;
-    // Можно добавить специфичные стили для disabled, если opacity 0.7 недостаточно
   `}
 
   &:hover:not(:disabled) {
@@ -203,7 +213,7 @@ const SubmitButton = styled(motion.button)`
   }
 
   &:disabled {
-    opacity: 0.8; // Сделаем чуть менее прозрачной при загрузке
+    opacity: 0.8; 
     cursor: not-allowed;
   }
 `;
@@ -270,55 +280,7 @@ const Message = styled(motion.p)`
     box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
   }
 `;
-
-const HomePageContainer = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: white;
-  padding: 20px;
-  z-index: 1;
-`;
-
-const LogoutButton = styled(motion.button)`
-  margin-top: 30px;
-  padding: 12px 25px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.3s ease, transform 0.2s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-  }
-`;
-
-const HomePage = ({ user, onLogout }) => {
-  return (
-    <HomePageContainer
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <h1 style={{ fontSize: '2.8rem', marginBottom: '15px' }}>Добро пожаловать обратно!</h1>
-      <p style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Вы вошли как:</p>
-      <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#f06388' }}>{user.email}</p>
-      <LogoutButton onClick={onLogout}>
-        <FiLogOut /> Выйти
-      </LogoutButton>
-    </HomePageContainer>
-  );
-};
+// --- Конец Styled Components для AuthPage ---
 
 const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated }) => {
   const [authMode, setAuthMode] = useState(initialAuthMode); 
@@ -361,17 +323,15 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
     if (initialAuthMode !== authMode) {
         setAuthMode(initialAuthMode);
     }
-    // Сбрасываем сообщение при смене initialAuthMode, если это не updatePassword,
-    // ИЛИ если это updatePassword, но сообщения еще нет (чтобы не сбросить ошибку валидации)
     if (initialAuthMode !== 'updatePassword' || !message.text ) {
-        setMessage({ text: '', type: '' });
+        if (!(authMode === 'updatePassword' && message.type === 'error')) {
+            // setMessage({ text: '', type: '' }); // Пока не сбрасываем, чтобы видеть сообщения
+        }
     }
-  }, [initialAuthMode]);
+  }, [initialAuthMode, authMode, message.text, message.type]);
 
   useEffect(() => {
-    // Сбрасываем сообщение при смене authMode (локальном), кроме некоторых случаев
-    if (!(authMode === 'updatePassword' && message.type === 'error') && 
-        !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
+    if (authMode !== 'updatePassword' && !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
         setMessage({ text: '', type: '' });
     }
   }, [authMode]);
@@ -438,7 +398,7 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
         setMessage({ text: 'Пароль успешно обновлен! Теперь вы можете войти с новым паролем.', type: 'success' });
         setPassword(''); 
         setConfirmPassword('');
-        if (onPasswordUpdated) onPasswordUpdated(); // Вызываем колбэк для App
+        if (onPasswordUpdated) onPasswordUpdated();
       }
       else { 
         onAuthSuccess(data.user);
@@ -495,7 +455,6 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
     }
     setPassword('');
     setConfirmPassword('');
-    // setMessage({ text: '', type: '' }); // Сбрасывается в useEffect по authMode
   };
 
   let cardTitle = "Добро пожаловать!";
@@ -515,27 +474,7 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
         <Form onSubmit={handlePasswordResetRequest} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailResetInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailResetInputId}>Ваш Email для сброса</InputLabel> </InputWrapper>
           <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
-            <AnimatePresence mode="wait" initial={false}>
-              {loading ? (
-                <Spinner 
-                  key="spinner-reset"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.2 }}
-                />
-              ) : (
-                <ButtonContent 
-                  key="content-reset"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <FiSend /> Отправить ссылку
-                </ButtonContent>
-              )}
-            </AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-reset" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-reset" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > <FiSend /> Отправить ссылку </ButtonContent> )} </AnimatePresence>
           </SubmitButton>
           <StyledLink href="#" onClick={(e) => switchToMode(e, 'signIn')} style={{ alignSelf: 'center', marginTop: '10px' }}> <FiArrowLeft size={16} /> Вернуться ко входу </StyledLink>
         </Form>
@@ -547,55 +486,15 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Новый пароль</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={confirmPasswordInputId} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={confirmPasswordInputId}>Подтвердите пароль</InputLabel> </InputWrapper>
           <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
-            <AnimatePresence mode="wait" initial={false}>
-              {loading ? (
-                <Spinner 
-                  key="spinner-update"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.2 }}
-                />
-              ) : (
-                <ButtonContent 
-                  key="content-update"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <FiKey /> Обновить пароль
-                </ButtonContent>
-              )}
-            </AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-update" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-update" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > <FiKey /> Обновить пароль </ButtonContent> )} </AnimatePresence>
           </SubmitButton>
         </Form>
       ) : (
         <Form onSubmit={handleAuthAction} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailInputId}>Ваш Email</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Пароль</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
-            <AnimatePresence mode="wait" initial={false}>
-              {loading ? (
-                <Spinner 
-                  key="spinner-auth"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.2 }}
-                />
-              ) : (
-                <ButtonContent 
-                  key="content-auth"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>}
-                </ButtonContent>
-              )}
-            </AnimatePresence>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading} >
+            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-auth" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > {authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>} </ButtonContent> )} </AnimatePresence>
           </SubmitButton>
         </Form>
       )}
@@ -638,11 +537,10 @@ function App() {
       } else if (_event === "SIGNED_OUT") {
         setAuthPageMode('signIn');
       } else if (_event === "USER_UPDATED" && authPageMode === 'updatePassword') {
-        // Это событие приходит после успешного supabase.auth.updateUser()
-        // Сессия уже обновлена, и это ОБЫЧНАЯ сессия, а не recovery.
-        // AuthPage уже вызвала onPasswordUpdated, который в App вызовет setAuthPageMode('signIn')
-        // Теперь, так как session есть (он был обновлен), App покажет HomePage.
-        console.log("USER_UPDATED (likely after password update), session active. App will show HomePage.");
+        // После успешного обновления пароля, сессия обновляется.
+        // AuthPage уже вызвала onPasswordUpdated (который в App вызвал setAuthPageMode('signIn')).
+        // Теперь, так как session уже установлен (это обычная сессия), App автоматически покажет HomePage.
+        console.log("USER_UPDATED (after password update), session active. App will show HomePage.");
       }
     };
     
@@ -658,8 +556,6 @@ function App() {
       if (!currentSession && !initialModeDeterminedByHash) {
           setAuthPageMode('signIn');
       }
-      // Если initialModeDeterminedByHash === true, мы ждем onAuthStateChange (PASSWORD_RECOVERY),
-      // который выставит authPageMode в 'updatePassword'.
       setAppLoading(false);
     });
 
@@ -673,12 +569,8 @@ function App() {
   };
 
   const handlePasswordHasBeenUpdatedInAuthPage = () => {
-    // Этот колбэк вызывается из AuthPage после того, как там установилось сообщение об успехе
-    // и ОЧИЩЕНЫ поля пароля. Теперь App может переключить режим для AuthPage.
-    // Когда onAuthStateChange получит событие USER_UPDATED (оно же SIGNED_IN),
-    // `session` в App обновится, и App покажет HomePage.
     console.log("App: onPasswordUpdated called from AuthPage. Setting authPageMode to signIn.");
-    setAuthPageMode('signIn');
+    setAuthPageMode('signIn'); 
   };
 
   if (appLoading) {
@@ -696,14 +588,12 @@ function App() {
         <AuthPage 
           onAuthSuccess={(user) => { 
             console.log('App: onAuthSuccess (signIn/signUp) called, user:', user);
-            // Здесь сессия уже должна быть установлена через onAuthStateChange,
-            // и App автоматически покажет HomePage.
           }} 
           initialAuthMode={authPageMode}
           onPasswordUpdated={handlePasswordHasBeenUpdatedInAuthPage} 
         />
       ) : (
-        <HomePage user={session.user} onLogout={handleLogout} />
+        <DashboardPage user={session.user} onLogout={handleLogout} /> // Используем DashboardPage
       )}
     </AppContainer>
   );
