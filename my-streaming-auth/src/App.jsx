@@ -1,10 +1,10 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'; // Добавили AnimatePresence
 import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiLogOut, FiSend, FiKey } from 'react-icons/fi';
 import { supabase } from './supabaseClient';
-import ParticlesBackground from './components/ParticlesBackground'; // Предполагается, что этот файл существует и настроен
+import ParticlesBackground from './components/ParticlesBackground';
 
 // --- Styled Components и ключевые кадры ---
 const gradientAnimation = keyframes`
@@ -147,6 +147,20 @@ const InputIcon = styled.span`
   }
 `;
 
+const spinnerAnimation = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const Spinner = styled(motion.div)`
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ${spinnerAnimation} 0.8s linear infinite;
+`;
+
 const SubmitButton = styled(motion.button)`
   width: 100%;
   padding: 16px 20px;
@@ -167,6 +181,15 @@ const SubmitButton = styled(motion.button)`
   box-shadow: 0 5px 20px rgba(231, 60, 126, 0.25);
   background-size: 200% auto;
   margin-top: 10px;
+  position: relative; // Для AnimatePresence
+  overflow: hidden;   // Для AnimatePresence
+
+  // Убираем эффекты hover/active когда кнопка disabled (loading)
+  // Они уже частично обрабатываются :not(:disabled), но для большей надежности:
+  ${props => props.disabled && `
+    cursor: not-allowed;
+    // Можно добавить специфичные стили для disabled, если opacity 0.7 недостаточно
+  `}
 
   &:hover:not(:disabled) {
     background-position: right center;
@@ -180,9 +203,16 @@ const SubmitButton = styled(motion.button)`
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.8; // Сделаем чуть менее прозрачной при загрузке
     cursor: not-allowed;
   }
+`;
+
+const ButtonContent = styled(motion.span)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 `;
 
 const LinksContainer = styled(motion.div)`
@@ -484,7 +514,29 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
       {authMode === 'resetPassword' ? (
         <Form onSubmit={handlePasswordResetRequest} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailResetInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailResetInputId}>Ваш Email для сброса</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading}> {loading ? 'Отправка...' : <><FiSend /> Отправить ссылку</>} </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
+            <AnimatePresence mode="wait" initial={false}>
+              {loading ? (
+                <Spinner 
+                  key="spinner-reset"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                />
+              ) : (
+                <ButtonContent 
+                  key="content-reset"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FiSend /> Отправить ссылку
+                </ButtonContent>
+              )}
+            </AnimatePresence>
+          </SubmitButton>
           <StyledLink href="#" onClick={(e) => switchToMode(e, 'signIn')} style={{ alignSelf: 'center', marginTop: '10px' }}> <FiArrowLeft size={16} /> Вернуться ко входу </StyledLink>
         </Form>
       ) : authMode === 'updatePassword' ? (
@@ -494,13 +546,57 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
           </p>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Новый пароль</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={confirmPasswordInputId} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={confirmPasswordInputId}>Подтвердите пароль</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading}> {loading ? 'Обновление...' : <><FiKey /> Обновить пароль</>} </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
+            <AnimatePresence mode="wait" initial={false}>
+              {loading ? (
+                <Spinner 
+                  key="spinner-update"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                />
+              ) : (
+                <ButtonContent 
+                  key="content-update"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FiKey /> Обновить пароль
+                </ButtonContent>
+              )}
+            </AnimatePresence>
+          </SubmitButton>
         </Form>
       ) : (
         <Form onSubmit={handleAuthAction} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailInputId}>Ваш Email</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Пароль</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading} > {loading ? (authMode === 'signUp' ? 'Регистрация...' : 'Вход...') : (authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>)} </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
+            <AnimatePresence mode="wait" initial={false}>
+              {loading ? (
+                <Spinner 
+                  key="spinner-auth"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                />
+              ) : (
+                <ButtonContent 
+                  key="content-auth"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>}
+                </ButtonContent>
+              )}
+            </AnimatePresence>
+          </SubmitButton>
         </Form>
       )}
 
