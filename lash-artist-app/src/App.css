@@ -1,0 +1,157 @@
+.container {
+  width: 100%;
+  max-width: 1280px; /* Чуть шире для современных экранов */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;  /* ~24px отступы по бокам */
+  padding-right: 1.5rem; /* ~24px отступы по бокам */
+}
+
+/* Стили для шапки */
+.app-header {
+  background-color: #FFFFFF; /* Белая шапка для чистоты */
+  padding: 1.5rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0,0,0,0.03); /* Очень мягкая, двойная тень */
+  text-align: center;
+  position: sticky; /* Зафиксируем шапку при скролле (если нужно) */
+  top: 0;
+  z-index: 1000;
+}
+
+.app-header h1 {
+  font-size: 2.25rem; /* ~36px */
+  color: #FAD2E1; /* Акцентный розовый */
+  /* Можно использовать и более темный, например, #424242 */
+  font-weight: 700; /* Жирный для основного заголовка сайта */
+  margin-bottom: 0; /* Убираем стандартный отступ у h1 внутри хедера */
+  letter-spacing: 0.5px;
+}
+/* --- Место для будущей навигации в хедере --- */
+/* .main-nav { ... } */
+
+/* Стили для основного контента */
+.app-main {
+  flex-grow: 1;
+  padding-top: 2.5rem; /* ~40px */
+  padding-bottom: 2.5rem; /* ~40px */
+}
+
+/* Стили для подвала */
+.app-footer {
+  background-color: #FFFFFF; /* Белый футер, как и шапка */
+  color: #5E5C5B; /* Charcoal Grey для текста */
+  padding: 2.5rem 0; /* Отступы сверху/снизу */
+  font-size: 0.9rem;
+  border-top: 1px solid #E0E0E0; /* Тонкая линия Silver Sand */
+}
+
+.footer-container {
+  display: flex;
+  flex-direction: column; /* По умолчанию элементы друг под другом на мобильных */
+  align-items: center; /* Центрируем все по горизонтали */
+  text-align: center;
+}
+
+.footer-copyright {
+  margin-bottom: 1.5rem; /* Отступ от копирайта до соц.сетей */
+}
+
+.footer-copyright p {
+  margin-bottom: 0.3rem; /* Маленький отступ между строками копирайта */
+}
+
+.footer-dev-note {
+  font-size: 0.75rem;
+  color: #BDBDBD; /* Dusty Gray - более светлый серый */
+  font-style: italic;
+}
+
+.social-links {
+  margin-bottom: 1.5rem; /* Отступ от соц.сетей до доп. ссылок */
+}
+
+.social-links a {
+  display: inline-block;
+  margin: 0 0.75rem;
+  color: #B1A392; /* Этот цвет должен примениться к иконке VK */
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #FAD2E1; /* Этот цвет должен примениться при наведении */
+  transform: scale(1.15);
+  text-decoration: none;
+}
+
+/* Стили для SVG внутри ссылок - могут быть не нужны, если иконка сама SVG */
+/* Убедимся, что нет конфликтующих стилей для svg внутри .social-links a,
+   если они не нужны для новой иконки */
+.social-links svg { /* Эти стили применялись к нашим кастомным SVG */
+  /* width: 24px; */ /* Размеры теперь задаются через props */
+  /* height: 24px; */
+  display: block; /* Это все еще может быть полезно для выравнивания */
+}
+
+/* Если иконка от @vkontakte/icons рендерится не как <svg>, а как-то иначе,
+   и размеры через props не работают, можно попробовать так: */
+.social-links a > * { /* Стилизуем прямого потомка ссылки, который и есть иконка */
+  display: block; /* или inline-block */
+  width: 24px;
+  height: 24px;
+}
+
+
+
+.footer-links {
+  font-size: 0.8rem;
+}
+
+.footer-links a {
+  color: #5E5C5B; /* Charcoal Grey для ссылок */
+  margin: 0 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #FAD2E1; /* Акцентный розовый */
+  text-decoration: underline;
+}
+
+.footer-link-divider {
+  margin: 0 0.5rem;
+  color: #D4CFC7; /* Limestone - для разделителя */
+}
+
+/* Адаптивность для футера (если нужно располагать элементы в строку на десктопе) */
+@media (min-width: 768px) {
+  .footer-container {
+    flex-direction: row; /* В строку на десктопе */
+    justify-content: space-between; /* Распределяем элементы по ширине */
+    text-align: left; /* Выравнивание текста слева для копирайта */
+  }
+
+  .footer-copyright {
+    margin-bottom: 0;
+    text-align: left; /* Для блока копирайта */
+  }
+  
+  .social-links {
+    margin-bottom: 0;
+    order: 1; /* Чтобы соцсети были после копирайта, если нужно изменить порядок */
+  }
+
+  .footer-links {
+    text-align: right; /* Ссылки справа */
+    order: 2; /* Порядок, если нужно */
+  }
+}
+
+@media (min-width: 992px) {
+    .social-links svg {
+        width: 24px;
+        height: 24px;
+    }
+     .footer-copyright p, .footer-links, .footer-dev-note {
+        font-size: 0.85rem;
+    }
+}

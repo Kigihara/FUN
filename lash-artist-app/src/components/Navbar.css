@@ -1,0 +1,162 @@
+.navbar {
+    width: 100%;
+    height: 70px; /* Высота навигационной панели */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    /* background-color: #FFFFFF; /* Фон шапки уже есть в App.css, если Navbar внутри Header */
+    /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0,0,0,0.03); */
+    /* position: sticky; */ /* Уже задано для app-header */
+    /* top: 0; */
+    /* z-index: 999; */
+  }
+  
+  .navbar-container {
+    display: flex;
+    justify-content: space-between; /* Логотип слева, меню справа */
+    align-items: center;
+    height: 100%;
+    width: 100%; /* Чтобы контейнер занимал всю ширину внутри .navbar */
+  }
+  
+  .navbar-logo {
+    color: #FAD2E1; /* Наш акцентный розовый */
+    /* Или можно основной темный: color: #212121; */
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.8rem; /* Размер логотипа/названия */
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+  }
+  
+  .navbar-logo:hover {
+    /* filter: brightness(90%); */
+    color: #E2BCC7; /* Чуть темнее розовый при наведении */
+  }
+  
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    text-align: center;
+  }
+  
+  .nav-item {
+    margin-left: 1.8rem; /* Отступы между пунктами меню */
+  }
+  
+  .nav-link {
+    color: #424242; /* Основной темный текст для ссылок */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem 0.2rem; /* Небольшие отступы для удобства клика */
+    position: relative; /* Для анимации подчеркивания */
+    transition: color 0.3s ease;
+  }
+  
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #FAD2E1; /* Акцентный розовый для подчеркивания */
+    transition: width 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: #FAD2E1; /* Акцентный розовый при наведении */
+  }
+  
+  .nav-link:hover::after {
+    width: 100%;
+  }
+  
+  /* Бургер-иконка */
+  .menu-icon {
+    display: none; /* Скрыта на десктопе */
+    cursor: pointer;
+    z-index: 1001; /* Поверх мобильного меню, если оно выезжает */
+  }
+  
+  .menu-icon div {
+    width: 25px;
+    height: 3px;
+    background-color: #424242; /* Цвет палочек бургера */
+    margin: 5px 0;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+  }
+  
+  /* Стили для мобильных устройств */
+  @media screen and (max-width: 992px) { /* Брейкпоинт для планшетов и мобильных */
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      /* height: calc(100vh - 70px); */ /* Высота на весь экран минус высота шапки */
+      height: auto; /* или просто по содержимому */
+      position: absolute;
+      top: 70px; /* Начинается сразу под шапкой */
+      left: -100%; /* Спрятано за экраном */
+      opacity: 1;
+      transition: all 0.4s ease;
+      background-color: #FFFFFF; /* Фон для выпадающего меню */
+      padding: 2rem 0; /* Отступы внутри меню */
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+  
+    .nav-menu.active {
+      left: 0; /* Показываем меню */
+      opacity: 1;
+      z-index: 1000;
+    }
+  
+    .nav-item {
+      margin: 0;
+      width: 100%;
+    }
+  
+    .nav-link {
+      display: block; /* Чтобы ссылка занимала всю ширину */
+      text-align: center;
+      padding: 1.2rem 0; /* Увеличиваем область клика */
+      width: 100%;
+      color: #424242; /* Темный текст */
+    }
+  
+    .nav-link:hover {
+      background-color: #F0EFEB; /* Легкий фон при наведении на пункт в мобильном меню */
+      color: #FAD2E1; /* Розовый текст */
+    }
+    .nav-link:hover::after {
+      width: 0; /* Убираем подчеркивание в мобильном меню */
+    }
+  
+    .menu-icon {
+      display: block; /* Показываем бургер-иконку */
+    }
+  
+    /* Анимация бургер-иконки в "крестик" */
+    .menu-icon.active .line1 {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+    .menu-icon.active .line2 {
+      opacity: 0;
+    }
+    .menu-icon.active .line3 {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+  }
+  
+  @media screen and (max-width: 768px) {
+    .navbar-logo {
+      font-size: 1.5rem; /* Уменьшаем лого на совсем маленьких экранах */
+    }
+  }
+  

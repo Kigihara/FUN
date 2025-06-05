@@ -6,8 +6,10 @@ import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiAr
 import { supabase } from './supabaseClient';
 import ParticlesBackground from './components/ParticlesBackground';
 import DashboardPage from './pages/DashboardPage';
+import SingleBoardPage from './pages/SingleBoardPage';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'; // Убрали useNavigate
 
-// --- Styled Components и ключевые кадры (для AuthPage и AppContainer) ---
+// --- Styled Components и ключевые кадры ---
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -280,7 +282,7 @@ const Message = styled(motion.p)`
     box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
   }
 `;
-// --- Конец Styled Components для AuthPage ---
+// --- Конец Styled Components ---
 
 const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated }) => {
   const [authMode, setAuthMode] = useState(initialAuthMode); 
@@ -289,6 +291,28 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  useEffect(() => {
+    if (initialAuthMode !== authMode) {
+        setAuthMode(initialAuthMode);
+    }
+    if (initialAuthMode !== 'updatePassword' || !message.text ) {
+        if (!(authMode === 'updatePassword' && message.type === 'error')) {
+            // setMessage({ text: '', type: '' });
+        }
+    }
+  }, [initialAuthMode]); 
+
+  useEffect(() => {
+    if (authMode !== 'updatePassword' && !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
+        if(!loading && message.text && (message.text.includes("Пожалуйста, введите") || message.text.includes("Пароли не совпадают") || message.text.includes("Пароль должен содержать"))) {
+            // не сбрасывать
+        } else {
+            setMessage({ text: '', type: '' });
+        }
+    }
+  }, [authMode]); 
+
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -319,66 +343,25 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
     visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90, damping: 13, duration: 0.4 }},
   };
 
-  useEffect(() => {
-    // Этот useEffect теперь будет реагировать ТОЛЬКО на изменение initialAuthMode из пропсов.
-    // Если App хочет принудительно сменить режим (например, на 'updatePassword'), он это сделает.
-    if (initialAuthMode !== authMode) {
-        setAuthMode(initialAuthMode);
-        // Сбрасываем сообщение только если это не ошибка, оставшаяся от предыдущей попытки в updatePassword
-        if (initialAuthMode !== 'updatePassword' || !message.text || message.type !== 'error') {
-             setMessage({ text: '', type: '' });
-        }
-    }
-  }, [initialAuthMode]); // Убрали authMode и message из зависимостей
-
-  useEffect(() => {
-    // Не сбрасываем сообщение, если оно только что было установлено (например, успех обновления пароля)
-    // или если это ошибка в режиме updatePassword
-    if (!(authMode === 'updatePassword' && message.type === 'error') && 
-        !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
-        // Также не сбрасываем, если это сообщение об ошибке валидации перед отправкой
-        if(!loading && message.text && (message.text.includes("Пожалуйста, введите") || message.text.includes("Пароли не совпадают") || message.text.includes("Пароль должен содержать"))) {
-            // не сбрасывать
-        } else {
-            setMessage({ text: '', type: '' });
-        }
-    }
-  }, [authMode]); // Зависит только от локального authMode
-
-
   const handleAuthAction = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: '', type: '' });
-
     let authResponse = null;
 
     if (authMode === 'signUp') {
-      if (password.length < 6) {
-        setMessage({ text: 'Пароль должен содержать не менее 6 символов.', type: 'error' });
-        setLoading(false);
-        return;
-      }
+      if (password.length < 6) { setMessage({ text: 'Пароль должен содержать не менее 6 символов.', type: 'error' }); setLoading(false); return; }
       authResponse = await supabase.auth.signUp({ email, password });
     } else if (authMode === 'signIn') {
       authResponse = await supabase.auth.signInWithPassword({ email, password });
     } else if (authMode === 'updatePassword') {
-      if (password.length < 6) {
-        setMessage({ text: 'Новый пароль должен содержать не менее 6 символов.', type: 'error' });
-        setLoading(false);
-        return;
-      }
-      if (password !== confirmPassword) {
-        setMessage({ text: 'Пароли не совпадают.', type: 'error' });
-        setLoading(false);
-        return;
-      }
+      if (password.length < 6) { setMessage({ text: 'Новый пароль должен содержать не менее 6 символов.', type: 'error' }); setLoading(false); return; }
+      if (password !== confirmPassword) { setMessage({ text: 'Пароли не совпадают.', type: 'error' }); setLoading(false); return; }
       authResponse = await supabase.auth.updateUser({ password: password });
     }
 
     setLoading(false);
     if (!authResponse) return;
-
     const { data, error } = authResponse;
 
     if (error) {
@@ -410,7 +393,7 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
         if (onPasswordUpdated) onPasswordUpdated();
       }
       else { 
-        onAuthSuccess(data.user);
+        if(onAuthSuccess) onAuthSuccess(data.user);
       }
     } else if (authMode === 'signUp' && !error && !data.user && data.session === null) {
         setMessage({ text: 'Регистрация успешна! Проверьте почту для подтверждения.', type: 'success' });
@@ -422,10 +405,7 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
 
   const handlePasswordResetRequest = async (e) => {
     e.preventDefault();
-    if (!email) {
-      setMessage({ text: 'Пожалуйста, введите ваш email.', type: 'error' });
-      return;
-    }
+    if (!email) { setMessage({ text: 'Пожалуйста, введите ваш email.', type: 'error' }); return; }
     setLoading(true);
     setMessage({ text: '', type: '' }); 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -434,16 +414,11 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
     setLoading(false); 
     if (error) {
       console.error('Ошибка запроса сброса пароля:', error);
-      if (error.message.includes("For security purposes")) {
-        setMessage({ text: 'Ссылка уже отправлена или запрошена недавно. Проверьте почту или попробуйте позже.', type: 'error' });
-      } else if (error.message.includes("Unable to validate email address: invalid format")) {
-        setMessage({ text: 'Неверный формат email адреса.', type: 'error' });
-      } else {
-        setMessage({ text: 'Если такой email зарегистрирован, ссылка для сброса пароля отправлена. Проверьте почту (включая папку "Спам").', type: 'success' });
-      }
+      if (error.message.includes("For security purposes")) { setMessage({ text: 'Ссылка уже отправлена или запрошена недавно. Проверьте почту или попробуйте позже.', type: 'error' }); }
+      else if (error.message.includes("Unable to validate email address: invalid format")) { setMessage({ text: 'Неверный формат email адреса.', type: 'error' }); }
+      else { setMessage({ text: 'Если такой email зарегистрирован, ссылка для сброса пароля отправлена. Проверьте почту (включая папку "Спам").', type: 'success' }); }
     } else {
       setMessage({ text: 'Ссылка для сброса пароля отправлена на ваш email. Проверьте почту (включая папку "Спам").', type: 'success' });
-      console.log('Запрос на сброс пароля отправлен для email:', email);
     }
   };
   
@@ -455,18 +430,11 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
   const switchToMode = (e, newMode) => {
     e.preventDefault();
     const previousEmail = (authMode === 'updatePassword' && newMode === 'signIn') ? email : '';
-    
-    setAuthMode(newMode); // Просто устанавливаем новый локальный режим
-    
-    if (previousEmail) {
-      setEmail(previousEmail);
-    } else if (newMode !== 'resetPassword' && newMode !== 'updatePassword') { 
-      // Не очищаем email для resetPassword или если перешли в updatePassword (email там не используется)
-      setEmail('');
-    }
+    setAuthMode(newMode);
+    if (previousEmail) { setEmail(previousEmail); } 
+    else if (newMode !== 'resetPassword' && newMode !== 'updatePassword') { setEmail(''); }
     setPassword('');
     setConfirmPassword('');
-    // setMessage({ text: '', type: '' }); // Сброс сообщения теперь в useEffect по authMode
   };
 
   let cardTitle = "Добро пожаловать!";
@@ -479,67 +447,60 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
       <motion.h2 style={{ color: 'white', marginBottom: '25px', fontSize: '2.5rem', fontWeight: '700', letterSpacing: '0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }} variants={itemVariants} >
         {cardTitle}
       </motion.h2>
-
       {message.text && ( <Message className={message.type} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }} > {message.type === 'error' && <FiAlertCircle size={18} style={{ marginRight: '5px', flexShrink: 0 }}/>} {message.type === 'success' && <FiCheckCircle size={18} style={{ marginRight: '5px', flexShrink: 0 }}/>} {message.text} </Message> )}
-      
       {authMode === 'resetPassword' ? (
         <Form onSubmit={handlePasswordResetRequest} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailResetInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailResetInputId}>Ваш Email для сброса</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
-            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-reset" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-reset" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > <FiSend /> Отправить ссылку </ButtonContent> )} </AnimatePresence>
-          </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading}> <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-reset"/> ) : ( <ButtonContent key="content-reset"> <FiSend /> Отправить ссылку </ButtonContent> )} </AnimatePresence> </SubmitButton>
           <StyledLink href="#" onClick={(e) => switchToMode(e, 'signIn')} style={{ alignSelf: 'center', marginTop: '10px' }}> <FiArrowLeft size={16} /> Вернуться ко входу </StyledLink>
         </Form>
       ) : authMode === 'updatePassword' ? (
         <Form onSubmit={handleAuthAction} variants={formVariants} initial="hidden" animate="visible">
-           <p style={{color: 'rgba(255,255,255,0.8)', textAlign: 'center', fontSize: '0.9rem', marginTop: '-10px', marginBottom: '10px'}}>
-            Введите новый пароль.
-          </p>
+           <p style={{color: 'rgba(255,255,255,0.8)', textAlign: 'center', fontSize: '0.9rem', marginTop: '-10px', marginBottom: '10px'}}> Введите новый пароль. </p>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Новый пароль</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={confirmPasswordInputId} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={confirmPasswordInputId}>Подтвердите пароль</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading}>
-            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-update" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-update" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > <FiKey /> Обновить пароль </ButtonContent> )} </AnimatePresence>
-          </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading}> <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-update"/> ) : ( <ButtonContent key="content-update"> <FiKey /> Обновить пароль </ButtonContent> )} </AnimatePresence> </SubmitButton>
         </Form>
       ) : (
         <Form onSubmit={handleAuthAction} variants={formVariants} initial="hidden" animate="visible">
           <InputWrapper variants={itemVariants}> <InputIcon><FiMail /></InputIcon> <InputField id={emailInputId} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={emailInputId}>Ваш Email</InputLabel> </InputWrapper>
           <InputWrapper variants={itemVariants}> <InputIcon><FiLock /></InputIcon> <InputField id={passwordInputId} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} /> <InputLabel htmlFor={passwordInputId}>Пароль</InputLabel> </InputWrapper>
-          <SubmitButton type="submit" variants={itemVariants} disabled={loading} >
-            <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-auth" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.2 }} /> ) : ( <ButtonContent key="content-auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} > {authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>} </ButtonContent> )} </AnimatePresence>
-          </SubmitButton>
+          <SubmitButton type="submit" variants={itemVariants} disabled={loading} > <AnimatePresence mode="wait" initial={false}> {loading ? ( <Spinner key="spinner-auth"/> ) : ( <ButtonContent key="content-auth"> {authMode === 'signUp' ? <><FiUserPlus /> Зарегистрироваться</> : <><FiLogIn /> Войти</>} </ButtonContent> )} </AnimatePresence> </SubmitButton>
         </Form>
       )}
-
       {authMode !== 'resetPassword' && authMode !== 'updatePassword' && (
         <LinksContainer variants={itemVariants}>
           {authMode === 'signIn' ? (
-            <>
-              <StyledLink href="#" onClick={(e) => switchToMode(e, 'signUp')}> <FiUserPlus size={16} /> Создать аккаунт </StyledLink>
-              <StyledLink href="#" onClick={(e) => switchToMode(e, 'resetPassword')}> <FiHelpCircle size={16} /> Забыли пароль? </StyledLink>
-            </>
-          ) : ( 
-            <StyledLink href="#" onClick={(e) => switchToMode(e, 'signIn')}> <FiArrowLeft size={16} /> Уже есть аккаунт? Войти </StyledLink>
-          )}
+            <> <StyledLink href="#" onClick={(e) => switchToMode(e, 'signUp')}> <FiUserPlus size={16} /> Создать аккаунт </StyledLink> <StyledLink href="#" onClick={(e) => switchToMode(e, 'resetPassword')}> <FiHelpCircle size={16} /> Забыли пароль? </StyledLink> </>
+          ) : ( <StyledLink href="#" onClick={(e) => switchToMode(e, 'signIn')}> <FiArrowLeft size={16} /> Уже есть аккаунт? Войти </StyledLink> )}
         </LinksContainer>
       )}
     </StyledAuthCard>
   );
 };
 
+// --- Защищенный роут ---
+const ProtectedRoute = ({ session, children }) => {
+  const location = useLocation();
+  if (!session) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  return children ? children : <Outlet />;
+};
+
 function App() {
   const [session, setSession] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
-  const [authPageMode, setAuthPageMode] = useState('signIn');
+  const [authPageInitialMode, setAuthPageInitialMode] = useState('signIn');
 
   useEffect(() => {
     const handleAuthChange = (_event, currentSession) => {
-      console.log("Auth event:", _event, "Session:", currentSession);
+      console.log("Auth event in App:", _event, "Session:", currentSession);
       setSession(currentSession);
 
       if (_event === "PASSWORD_RECOVERY" && currentSession) {
-        console.log("PASSWORD_RECOVERY event, App sets authPageMode to updatePassword");
-        setAuthPageMode('updatePassword');
+        console.log("App: PASSWORD_RECOVERY event, setting authPageInitialMode to updatePassword");
+        setAuthPageInitialMode('updatePassword');
         if (window.history.replaceState) {
           const cleanURL = window.location.href.split('#')[0];
           window.history.replaceState(null, null, cleanURL);
@@ -547,33 +508,32 @@ function App() {
           window.location.hash = ''; 
         }
       } else if (_event === "SIGNED_OUT") {
-        setAuthPageMode('signIn');
-      } else if (_event === "USER_UPDATED" && authPageMode === 'updatePassword') {
-        // После успешного обновления пароля, сессия обновляется.
-        // AuthPage уже вызвала onPasswordUpdated (который в App вызвал setAuthPageMode('signIn')).
-        // Теперь, так как session уже установлен (это обычная сессия), App автоматически покажет HomePage.
-        console.log("USER_UPDATED (after password update), session active. App will show HomePage.");
+        setAuthPageInitialMode('signIn');
+      } else if (_event === "USER_UPDATED" && authPageInitialMode === 'updatePassword') {
+         console.log("App: USER_UPDATED (after password update), session active. App logic will show HomePage due to session.");
       }
     };
     
-    let initialModeDeterminedByHash = false;
+    let isRecoveryFlowOnLoad = false;
     const hash = window.location.hash;
     if (hash && hash.includes('type=recovery')) {
-        console.log("Recovery hash on initial load.");
-        initialModeDeterminedByHash = true; 
+        console.log("App: Recovery hash detected on initial load.");
+        isRecoveryFlowOnLoad = true; 
     }
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
-      if (!currentSession && !initialModeDeterminedByHash) {
-          setAuthPageMode('signIn');
+      if (!currentSession && !isRecoveryFlowOnLoad) {
+          setAuthPageInitialMode('signIn');
       }
       setAppLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
     
-    return () => subscription.unsubscribe();
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -581,8 +541,8 @@ function App() {
   };
 
   const handlePasswordHasBeenUpdatedInAuthPage = () => {
-    console.log("App: onPasswordUpdated called from AuthPage. Setting authPageMode to signIn.");
-    setAuthPageMode('signIn'); 
+    console.log("App: onPasswordUpdated called from AuthPage. Setting authPageInitialMode to signIn.");
+    setAuthPageInitialMode('signIn'); 
   };
 
   if (appLoading) {
@@ -596,19 +556,38 @@ function App() {
   return (
     <AppContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} >
       <ParticlesBackground />
-      {authPageMode === 'updatePassword' || !session ? (
-        <AuthPage 
-          onAuthSuccess={(user) => { 
-            console.log('App: onAuthSuccess (signIn/signUp) called, user:', user);
-          }} 
-          initialAuthMode={authPageMode}
-          onPasswordUpdated={handlePasswordHasBeenUpdatedInAuthPage} 
+      <Routes>
+        <Route
+          path="/auth"
+          element={
+            !session || authPageInitialMode === 'updatePassword' ? (
+              <AuthPageWrapper>
+                <AuthPage 
+                  onAuthSuccess={handleAuthSuccess}
+                  initialAuthMode={authPageInitialMode}
+                  onPasswordUpdated={handlePasswordHasBeenUpdatedInAuthPage}
+                />
+              </AuthPageWrapper>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
         />
-      ) : (
-        <DashboardPage user={session.user} onLogout={handleLogout} /> // Используем DashboardPage
-      )}
+        <Route element={<ProtectedRoute session={session} />}>
+          <Route path="/dashboard" element={<DashboardPage user={session?.user} onLogout={handleLogout} />} />
+          <Route path="/board/:boardId" element={<SingleBoardPage />} />
+        </Route>
+        <Route 
+          path="*" 
+          element={session ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />} 
+        />
+      </Routes>
     </AppContainer>
   );
 }
+
+const handleAuthSuccess = (loggedInUser) => {
+  console.log("App: Auth successful (signIn/signUp), user:", loggedInUser);
+};
 
 export default App;

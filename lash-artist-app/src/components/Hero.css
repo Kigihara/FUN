@@ -1,0 +1,174 @@
+.hero-section {
+    position: relative;
+    height: 85vh; /* Высота первого экрана, можно настроить (например, 80vh, 90vh, или 100vh) */
+    min-height: 500px; /* Минимальная высота для очень маленьких экранов */
+    background-size: cover;
+    background-position: center center; /* Центрируем изображение */
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Параллакс-эффект при скролле (можно убрать, если не нравится) */
+    display: flex;
+    align-items: center; /* Вертикальное выравнивание контента по центру */
+    justify-content: center; /* Горизонтальное выравнивание контента по центру */
+    text-align: center;
+    color: #ffffff; /* Базовый цвет текста на фоне - белый */
+    overflow: hidden; /* Чтобы анимации не вылезали */
+  }
+  
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Затемняющий оверлей. Можно настроить цвет и прозрачность */
+    /* background-color: rgba(0, 0, 0, 0.4); */ /* Черный с 40% прозрачности */
+    /* Или градиентный оверлей: */
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.1) 100%);
+    z-index: 1;
+  }
+  
+  .hero-content {
+    position: relative; /* Чтобы быть поверх оверлея */
+    z-index: 2;
+    max-width: 800px; /* Ограничиваем ширину текстового блока */
+    padding: 2rem; /* Отступы для самого контента */
+  }
+  
+  /* Анимация появления для элементов */
+  @keyframes heroFadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .hero-headline {
+    font-family: 'Montserrat', sans-serif; /* Или другой акцидентный шрифт, если выберем */
+    font-size: 3rem; /* Базовый размер, будет адаптироваться */
+    font-weight: 700; /* Жирный */
+    line-height: 1.2;
+    margin-bottom: 1rem; /* Отступ после основного заголовка */
+    color: #FFFFFF; /* Белый цвет текста */
+    text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3); /* Легкая тень для лучшей читаемости */
+  
+    /* Анимация */
+    opacity: 0;
+    transform: translateY(30px);
+    animation: heroFadeInUp 0.8s 0.2s ease-out forwards;
+  }
+  
+  .hero-subheadline {
+    font-family: 'Open Sans', sans-serif; /* Или основной шрифт */
+    font-size: 1.25rem; /* Базовый размер */
+    font-weight: 400; /* Обычный */
+    line-height: 1.7;
+    margin-bottom: 2rem; /* Отступ после подзаголовка */
+    color: rgba(255, 255, 255, 0.9); /* Чуть менее яркий белый */
+    max-width: 650px; /* Ограничиваем ширину подзаголовка */
+    margin-left: auto;
+    margin-right: auto;
+  
+    /* Анимация */
+    opacity: 0;
+    transform: translateY(30px);
+    animation: heroFadeInUp 0.8s 0.4s ease-out forwards;
+  }
+  
+  .hero-cta-button {
+    background-color: #FAD2E1; /* Наш акцентный розовый */
+    color: #424242; /* Темный текст на кнопке */
+    border: 2px solid #FAD2E1;
+    padding: 1rem 2.5rem; /* Достаточно крупная кнопка */
+    border-radius: 50px; /* Полностью скругленная */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(250, 210, 225, 0.3); /* Тень в цвет кнопки */
+  
+    /* Анимация */
+    opacity: 0;
+    transform: translateY(30px);
+    animation: heroFadeInUp 0.8s 0.6s ease-out forwards;
+  }
+  
+  .hero-cta-button:hover {
+    background-color: #FFFFFF; /* Белый фон при наведении */
+    color: #FAD2E1; /* Розовый текст */
+    border-color: #FAD2E1;
+    transform: translateY(-3px) scale(1.02); /* Подъем и легкое увеличение */
+    box-shadow: 0 6px 20px rgba(250, 210, 225, 0.5);
+  }
+  
+  .hero-cta-button:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 3px 10px rgba(250, 210, 225, 0.4);
+  }
+  
+  /* Адаптивность для Hero Section */
+  @media (max-width: 992px) { /* Планшеты */
+    .hero-headline {
+      font-size: 2.5rem; /* Уменьшаем заголовок */
+    }
+    .hero-subheadline {
+      font-size: 1.1rem; /* Уменьшаем подзаголовок */
+    }
+  }
+  
+  @media (max-width: 768px) { /* Мобильные */
+    .hero-section {
+      height: auto; /* Автоматическая высота */
+      min-height: 70vh; /* Минимальная высота, чтобы текст поместился */
+      padding-top: 6rem; /* Отступ сверху, чтобы не перекрывалось шапкой если она sticky */
+      padding-bottom: 4rem; /* Отступ снизу */
+      background-attachment: scroll; /* Убираем fixed для мобильных, т.к. может плохо работать */
+    }
+    .hero-headline {
+      font-size: 2rem; /* Еще меньше заголовок */
+    }
+    .hero-subheadline {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero-cta-button {
+      padding: 0.8rem 2rem;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .scroll-down-indicator {
+    position: absolute;
+    bottom: 2.5rem; /* Чуть выше */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    animation: bounceUpDown 2.5s infinite ease-in-out;
+    color: rgba(255, 255, 255, 0.6); /* Менее яркая */
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.3s ease;
+    padding: 0.5rem; /* Увеличиваем область клика */
+    border-radius: 50%; /* Если хотим сделать кружок вокруг */
+  }
+
+  .scroll-down-indicator:hover {
+    color: #FFFFFF; /* Ярче при наведении */
+    transform: translateX(-50%) scale(1.1); /* Легкое увеличение */
+   }
+   
+   /* Улучшенная анимация "прыжка" */
+   @keyframes bounceUpDown {
+     0%, 100% {
+       transform: translateX(-50%) translateY(0);
+     }
+     50% {
+       transform: translateX(-50%) translateY(-12px); /* Больше амплитуда */
+     }
+   }
+   
