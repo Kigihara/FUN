@@ -2,14 +2,14 @@ import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ServiceList from './components/ServiceList';
-// Импортируем иконку VK
-import { Icon24LogoVk } from '@vkontakte/icons'; // Для монохромной, красится через CSS
-// Если нужна цветная по умолчанию: import { Icon24LogoVkColor } from '@vkontakte/icons';
+import AboutMe from './components/AboutMe'; // <-- 1. Импортируем компонент
+import { Icon24LogoVk } from '@vkontakte/icons';
 
 import './App.css';
 
 function App() {
   const SocialLinks = () => (
+    // ... (код SocialLinks остается без изменений) ...
     <div className="social-links">
       {/* Instagram */}
       <a href="https://instagram.com/ВАШ_ПРОФИЛЬ" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -26,10 +26,9 @@ function App() {
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
         </svg>
       </a>
-      {/* VK - Используем иконку из @vkontakte/icons */}
+      {/* VK */}
       <a href="https://vk.com/ВАША_СТРАНИЦА" target="_blank" rel="noopener noreferrer" aria-label="VK">
-        <Icon24LogoVk width={27.5} height={27.5} /> {/* Задаем размеры, цвет будет из CSS */}
-        {/* Если бы использовали цветную: <Icon24LogoVkColor width={24} height={24} /> */}
+        <Icon24LogoVk width={27.5} height={27.5} /> 
       </a>
     </div>
   );
@@ -43,9 +42,12 @@ function App() {
       <Hero />
 
       <main className="app-main">
-        <div id="services" className="container">
+        {/* Контейнер для ServiceList уже есть внутри App.jsx */}
+        <div className="container"> 
           <ServiceList />
         </div>
+
+        <AboutMe /> {/* <-- 2. Добавляем компонент сюда */}
       </main>
 
       <footer className="app-footer">

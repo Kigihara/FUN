@@ -1,0 +1,117 @@
+.about-me-section {
+    padding: 3rem 0; /* Отступы сверху и снизу секции */
+    background-color: #FFFFFF; /* Белый фон для этой секции, чтобы выделить от основного фона страницы */
+    /* Можно использовать и наш основной фон #F0EFEB, если не хотим сильного контраста */
+    /* background-color: #F0EFEB; */
+    /* border-top: 1px solid #E2ECE9; */ /* Тонкая линия сверху, если фон страницы другой */
+    /* border-bottom: 1px solid #E2ECE9; */ /* Тонкая линия снизу */
+  }
+  
+  .about-me-container {
+    display: flex;
+    flex-direction: column; /* На мобильных по умолчанию фото сверху, текст снизу */
+    align-items: center; /* Центрируем контент на мобильных */
+    gap: 2rem; /* Отступ между фото и текстом на мобильных */
+  }
+  
+  .about-me-image-wrapper {
+    flex-shrink: 0; /* Чтобы изображение не сжималось */
+    width: 100%; /* На мобильных фото на всю ширину контейнера */
+    max-width: 320px; /* Максимальная ширина фото на мобильных и десктопе */
+    border-radius: 12px; /* Скругление углов фото */
+    overflow: hidden; /* Обрезаем изображение по рамке */
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.08),
+                0px 3px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .about-me-image {
+    display: block;
+    width: 100%;
+    height: auto; /* Автоматическая высота для сохранения пропорций */
+    /* Можно задать aspect-ratio, если все фото мастера будут одного формата */
+    /* aspect-ratio: 3 / 4; */
+    /* object-fit: cover; */
+  }
+  
+  .about-me-content {
+    flex-grow: 1; /* Текстовый блок занимает оставшееся место */
+    text-align: left; /* Текст по левому краю */
+  }
+  
+  .about-me-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.25rem; /* ~36px */
+    font-weight: 600;
+    color: #212121; /* Почти черный */
+    margin-bottom: 1.5rem;
+    text-align: center; /* Заголовок секции по центру на мобильных */
+  }
+  
+  .about-me-text {
+    font-size: 1rem; /* ~16px */
+    line-height: 1.75; /* Увеличенный интервал для лучшей читаемости */
+    color: #424242; /* Dark Gray */
+    margin-bottom: 2rem;
+    /* Можно добавить text-align: justify; если хочется выравнивание по ширине, но осторожно */
+  }
+  
+  .advantages-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem; /* ~24px */
+    font-weight: 500;
+    color: #212121;
+    margin-bottom: 1rem;
+  }
+  
+  .advantages-list {
+    list-style: none; /* Убираем стандартные маркеры списка */
+    padding-left: 0;
+    margin-bottom: 0; /* Убираем стандартный отступ у списка */
+  }
+  
+  .advantage-item {
+    display: flex;
+    align-items: flex-start; /* Выравнивание иконки и текста по верху */
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem; /* ~15px */
+    color: #5E5C5B; /* Charcoal Grey */
+    line-height: 1.6;
+  }
+  
+  .advantage-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0; /* Иконка не сжимается */
+    margin-right: 0.8rem; /* Отступ от иконки до текста */
+    color: #FAD2E1; /* Акцентный розовый для иконок */
+    margin-top: 0.1em; /* Небольшая корректировка для вертикального выравнивания */
+  }
+  
+  /* Адаптивность для десктопов */
+  @media (min-width: 768px) {
+    .about-me-container {
+      flex-direction: row; /* Фото слева, текст справа */
+      align-items: flex-start; /* Выравнивание по верху */
+      gap: 2.5rem; /* Увеличиваем отступ между фото и текстом */
+    }
+  
+    .about-me-image-wrapper {
+      width: 40%; /* Ширина блока с фото (можно в % или px) */
+      max-width: 380px; /* Ограничение максимальной ширины фото */
+    }
+  
+    .about-me-content {
+      width: 60%; /* Ширина текстового блока */
+    }
+    
+    .about-me-title {
+      text-align: left; /* Заголовок секции по левому краю на десктопе */
+       font-size: 2.5rem; /* Чуть больше на десктопе */
+    }
+  }
+  
+  @media (min-width: 992px) {
+      .about-me-container {
+          gap: 3.5rem; /* Еще немного увеличиваем отступ */
+      }
+  }
