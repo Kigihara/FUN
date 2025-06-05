@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import './ServiceList.css';
 
+// Иконка часов (outline)
+const ClockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="details-icon">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+);
+
 // Компонент для анимированного текста загрузки
 const AnimatedLoadingText = ({ text }) => {
   return (
@@ -10,9 +18,9 @@ const AnimatedLoadingText = ({ text }) => {
         <span
           key={index}
           className="animated-loading-char"
-          style={{ animationDelay: `${index * 0.07}s` }} // Задержка для каждой буквы
+          style={{ animationDelay: `${index * 0.07}s` }}
         >
-          {char === ' ' ? '\u00A0' : char} {/* Заменяем пробел на неразрывный для корректной анимации */}
+          {char === ' ' ? '\u00A0' : char}
         </span>
       ))}
     </div>
@@ -28,17 +36,17 @@ function ServiceList() {
     async function fetchServices() {
       setLoading(true);
       setError(null);
-      // Имитация более длительной загрузки для демонстрации прелоадера (можно убрать)
-       // await new Promise(resolve => setTimeout(resolve, 1500)); 
+      // Раскомментируй для теста прелоадера, если нужно:
+      // await new Promise(resolve => setTimeout(resolve, 1500)); 
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase // Переименовал error чтобы не конфликтовать с useState
           .from('services')
           .select('id, name, description, price, duration_minutes, image_url')
           .order('price', { ascending: true });
 
-        if (error) {
-          console.error('Ошибка при загрузке услуг:', error);
-          setError(error.message);
+        if (fetchError) {
+          console.error('Ошибка при загрузке услуг:', fetchError);
+          setError(fetchError.message);
         } else {
           setServices(data);
         }
@@ -55,7 +63,7 @@ function ServiceList() {
 
   if (loading) {
     return (
-      <div className="loading-container"> {/* Добавим контейнер для центрирования */}
+      <div className="loading-container">
         <AnimatedLoadingText text="Загрузка услуг..." />
       </div>
     );
@@ -70,7 +78,7 @@ function ServiceList() {
   }
 
   return (
-    <section className="service-list-section">
+    <section id="services" className="service-list-section">
       <h2 className="section-title">Наши Услуги</h2>
       <div className="service-list-grid">
         {services.map((service, index) => (
@@ -83,11 +91,24 @@ function ServiceList() {
             <div className="service-card-content">
               <h3 className="service-card-title">{service.name}</h3>
               <p className="service-card-description">{service.description || 'Описание отсутствует'}</p>
-              <div className="service-card-details">
-                <span className="service-card-price">{service.price} руб.</span>
-                <span className="service-card-duration">{service.duration_minutes} мин.</span>
+              
+              <div className="service-card-meta">
+                <div className="service-detail-item price-item">
+                  <span className="price-value">{service.price}</span>
+                  <span className="price-currency"> ₽</span>
+                </div>
+                <div className="service-detail-item duration-item">
+                  <ClockIcon />
+                  <span>{service.duration_minutes} мин.</span>
+                </div>
               </div>
-              <button className="service-card-button">Подробнее</button>
+
+              <button 
+                className="service-card-button-cta" 
+                onClick={(e) => { e.preventDefault(); alert('Переход к форме записи (в разработке)'); }}
+              >
+                Записаться
+              </button>
             </div>
           </div>
         ))}

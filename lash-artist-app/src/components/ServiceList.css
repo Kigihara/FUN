@@ -1,220 +1,26 @@
-
-.service-list-section {
-    padding-bottom: 2rem;
-  }
-  
-  .section-title { /* "Наши Услуги" */
-    text-align: center;
-    font-size: 2.5rem; /* ~40px, более заметный */
-    font-weight: 500; /* Средняя насыщенность, чтобы не был слишком тяжелым */
-    margin-bottom: 2.5rem; /* ~40px */
-    color: #212121; /* Почти черный */
-  }
-  
-  .loading-message,
-  .error-message,
-  .info-message {
-    text-align: center;
-    font-size: 1.125rem;
-    color: #5E5C5B; /* Charcoal Grey */
-    padding: 2.5rem;
-  }
-  
-  .error-message {
-    color: #D32F2F; /* Более приглушенный красный для ошибок */
-  }
-  
-  .service-list-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem; /* ~32px отступы, чуть больше */
-  }
-  
-  /* Карточка услуги */
-  .service-card {
-    background-color: #FFFFFF; /* Белый фон карточки */
-    border-radius: 16px; /* Более выраженное скругление */
-    /* Многослойная, мягкая тень для "парящего" эффекта, вдохновлено современными UI */
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.04),
-                0px 8px 24px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
-                box-shadow 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-    
-    opacity: 0;
-    transform: translateY(25px);
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-  
-  .service-card:hover {
-    transform: translateY(-8px); /* Более заметный подъем */
-    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.05),
-                0px 12px 32px rgba(0, 0, 0, 0.08); /* Тень становится чуть интенсивнее */
-  }
-  
-  .service-card-image-wrapper {
-    width: 100%;
-    /* Рекомендую задать соотношение сторон для изображений, чтобы карточки были одинаковой высоты до текста */
-    /* Например, для ландшафтных изображений: */
-    aspect-ratio: 16 / 10; /* или 4 / 3, 3 / 2 - подбери под свои изображения */
-    /* height: 220px; /* Можно и фиксированную высоту, если aspect-ratio не подходит */
-    overflow: hidden;
-    background-color: #F0EFEB; /* Плейсхолдер цвет, если картинка не загрузится */
-  }
-  
-  .service-card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-  
-  .service-card:hover .service-card-image {
-    transform: scale(1.08); /* Чуть больший зум */
-  }
-  
-  .service-card-content {
-    padding: 1.75rem; /* ~28px, больше "воздуха" внутри */
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-  }
-  
-  .service-card-title {
-    font-size: 1.375rem; /* ~22px */
-    font-weight: 600;
-    margin-bottom: 0.6rem; /* ~9px */
-    color: #212121;
-  }
-  
-  .service-card-description {
-    font-size: 0.95rem; /* ~15px */
-    color: #5E5C5B; /* Charcoal Grey */
-    margin-bottom: 1.25rem; /* ~20px */
-    flex-grow: 1;
-    line-height: 1.6;
-  }
-  
-  .service-card-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem; /* ~24px */
-    font-size: 0.9rem; /* ~14.4px */
-    color: #424242; /* Dark Gray для цены и длительности */
-  }
-  
-  .service-card-price {
-    font-weight: 600; /* Делаем цену жирнее */
-    font-size: 1.1rem; /* ~17.6px */
-    color: #424242; /* Основной темный цвет текста */
-  }
-  
-  .service-card-duration {
-    font-style: normal; /* Убираем курсив, если не нужен */
-    font-weight: 500; /* Средняя насыщенность */
-    color: #5E5C5B;
-  }
-  
-  .service-card-button {
-    background-color: #FAD2E1; /* Акцентный розовый */
-    color: #424242; /* Темный текст на светлом розовом для читаемости */
-    border: 2px solid transparent; /* Для возможного hover-эффекта с рамкой */
-    padding: 0.8rem 1.8rem; /* ~13px ~29px */
-    border-radius: 25px; /* Полностью скругленная кнопка для мягкости */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600; /* Жирнее для кнопки */
-    font-size: 0.875rem; /* ~14px */
-    text-transform: uppercase;
-    letter-spacing: 0.8px; /* Больше разреженности букв */
-    cursor: pointer;
-    transition: all 0.3s ease;
-    align-self: flex-start; /* или center, если хочешь по центру карточки */
-    margin-top: auto; /* Прижимает кнопку к низу, если описание короткое */
-  }
-  
-  .service-card-button:hover {
-    background-color: #FFFFFF; /* Белый фон при наведении */
-    color: #FAD2E1; /* Розовый текст */
-    border-color: #FAD2E1; /* Розовая рамка */
-    transform: translateY(-3px);
-    box-shadow: 0 4px 10px rgba(250, 210, 225, 0.4); /* Тень в цвет кнопки */
-  }
-  
-  .service-card-button:active {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(250, 210, 225, 0.3);
-  }
-  
-  /* --- Заготовка для кнопки "Записаться" --- */
-  /* Если на карточке будет две кнопки, например "Подробнее" и "Записаться" */
-  /* .secondary-button {
-    background-color: transparent;
-    color: #B1A392; // Greige
-    border: 2px solid #D4CFC7; // Limestone
-  }
-  .secondary-button:hover {
-    background-color: #B1A392;
-    color: #FFFFFF;
-    border-color: #B1A392;
-  } */
-  
-  /* Адаптивность (можно оставить как было или немного подправить брейкпоинты) */
-  @media (min-width: 640px) {
-    .service-list-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 2.25rem; /* ~36px */
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .service-list-grid {
-      /* Можно оставить 2 колонки для более крупных карточек или вернуть 3 */
-      /* grid-template-columns: repeat(2, 1fr); */
-       grid-template-columns: repeat(3, 1fr); /* Для примера оставляю 3 */
-      gap: 2.5rem; /* ~40px */
-    }
-    /* Можно увеличить шрифты для десктопа, если нужно */
-    /* .service-card-title { font-size: 1.5rem; } */
-  }
-  
-  /* Переопределение анимации fadeInUp, если нужно сделать ее еще плавнее */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(35px); /* Чуть больше начальное смещение */
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .loading-container {
+/* Стили для прелоадера и сообщений */
+.loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 300px; /* Минимальная высота, чтобы было видно на пустой странице */
+    min-height: 300px;
     padding: 3rem 0;
     width: 100%;
   }
   
   .animated-loading-text {
-    font-family: 'Montserrat', sans-serif; /* Используем шрифт заголовков для эффектности */
-    font-size: 1.8rem; /* Размер текста загрузки */
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.8rem;
     font-weight: 500;
-    color: #5E5C5B; /* Charcoal Grey, как у второстепенного текста */
+    color: #5E5C5B;
     text-align: center;
   }
   
   .animated-loading-char {
-    display: inline-block; /* Чтобы анимация transform работала */
+    display: inline-block;
     opacity: 0;
-    transform: translateY(15px) scale(0.8); /* Начальное состояние: снизу и чуть меньше */
+    transform: translateY(15px) scale(0.8);
     animation: fadeInChar 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    /* cubic-bezier для приятной кривой анимации */
   }
   
   @keyframes fadeInChar {
@@ -224,10 +30,206 @@
     }
   }
   
-  /* Адаптивность для текста загрузки */
-  @media (max-width: 768px) {
+  .error-message,
+  .info-message {
+    text-align: center;
+    font-size: 1.125rem;
+    color: #718096;
+    padding: 2rem;
+  }
+  
+  .error-message {
+    color: #D32F2F; 
+  }
+  
+  
+  /* Стили для секции услуг */
+  .service-list-section {
+    padding-bottom: 2rem;
+  }
+  
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 500;
+    margin-bottom: 2.5rem;
+    color: #212121;
+  }
+  
+  .service-list-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem; 
+  }
+  
+  /* Карточка услуги - Новый дизайн */
+  .service-card {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.05),
+                0px 1px 3px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0;
+    transform: translateY(25px);
+    animation: fadeInUp 0.6s ease-out forwards;
+    border: 1px solid #E2ECE9; 
+  }
+  
+  .service-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.07),
+                0px 2px 5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .service-card-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    position: relative;
+    background-color: #F0EFEB; 
+  }
+  
+  .service-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .service-card:hover .service-card-image {
+    transform: scale(1.05);
+  }
+  
+  .service-card-content {
+    padding: 1.25rem 1.5rem; 
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  
+  .service-card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+    color: #212121;
+  }
+  
+  .service-card-description {
+    font-size: 0.875rem;
+    color: #5E5C5B;
+    margin-bottom: 1.25rem;
+    flex-grow: 1;
+    line-height: 1.6;
+  }
+  
+  .service-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-top: 1px solid #E2ECE9;
+    padding-top: 0.75rem;
+  }
+  
+  .service-detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #424242;
+  }
+  
+  .price-item .price-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #212121;
+  }
+  .price-item .price-currency {
+    margin-left: 0.2em;
+    font-weight: 500;
+  }
+  
+  .duration-item {
+    color: #5E5C5B;
+  }
+  
+  .details-icon { /* Стили для иконки часов */
+    width: 16px;
+    height: 16px;
+    margin-right: 0.4rem;
+    stroke-width: 2.2;
+    color: #B1A392;
+  }
+  
+  /* НОВЫЕ СТИЛИ ДЛЯ КНОПКИ .service-card-button-cta */
+  .service-card-button-cta {
+    background-color: #FAD2E1; /* Акцентный розовый фон */
+    color: #424242; /* Темный текст */
+    border: 1px solid #FAD2E1; 
+    padding: 0.7rem 1.4rem; 
+    border-radius: 8px; 
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s ease-out;
+    align-self: center; 
+    margin-top: auto; 
+    box-shadow: 0 2px 4px rgba(250, 210, 225, 0.2); 
+  }
+  
+  .service-card-button-cta:hover {
+    background-color: #E2BCC7; 
+    border-color: #E2BCC7;
+    color: #FFFFFF; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(226, 188, 199, 0.3);
+  }
+  
+  .service-card-button-cta:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 4px rgba(226, 188, 199, 0.2);
+  }
+  
+  /* Адаптивность для сетки карточек */
+  @media (max-width: 768px) { /* Адаптивность для текста загрузки */
     .animated-loading-text {
       font-size: 1.5rem;
     }
   }
   
+  @media (min-width: 768px) {
+    .service-list-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+     .service-card-title {
+      font-size: 1.375rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .service-list-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.25rem;
+    }
+  }
+  
+  /* Анимация появления (остается как есть или можно настроить) */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

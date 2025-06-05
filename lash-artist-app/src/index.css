@@ -1,6 +1,7 @@
-/* Импорт шрифтов, если еще не сделан в HTML или здесь */
+/* Импорт шрифтов (если еще не сделан в HTML) */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap');
 
+/* Сброс некоторых стилей по умолчанию и базовые настройки */
 *,
 *::before,
 *::after {
@@ -10,7 +11,7 @@
 }
 
 html {
-  font-size: 100%;
+  font-size: 100%; /* 1rem = 16px, можно настроить для адаптивной типографики */
   scroll-behavior: smooth;
 }
 
@@ -19,7 +20,26 @@ body {
   font-weight: 400; /* Стандартная насыщенность для основного текста */
   line-height: 1.65; /* Немного увеличим для воздушности */
   color: #424242; /* Основной цвет текста - Dark Gray */
-  background-color: #F0EFEB; /* Фон страницы - теплый серо-бежевый */
+  
+  /* --- ФОН С ДИАГОНАЛЬНЫМИ ЛИНИЯМИ --- */
+  background-color: #F0EFEB; /* Резервный цвет, если градиент не сработает */
+  background-image: repeating-linear-gradient(
+    45deg,                                /* Угол наклона линий */
+    transparent,                         /* Первый цвет - прозрачный */
+    transparent 10px,                    /* Прозрачный до 10px */
+    rgba(224, 224, 224, 0.15) 10px,       /* Цвет линии (Silver Sand #E0E0E0 с очень низкой прозрачностью) до 10px */
+    rgba(224, 224, 224, 0.15) 12px        /* Цвет линии до 12px (толщина линии 2px) */
+  );
+  /* Альтернативный вариант с более редкими и тонкими линиями: */
+  /* background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(212, 207, 199, 0.2) 20px, // Limestone #D4CFC7 с alpha 0.2
+    rgba(212, 207, 199, 0.2) 21px  // Толщина линии 1px
+  ); */
+  /* --- КОНЕЦ НАСТРОЕК ФОНА --- */
+  
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
