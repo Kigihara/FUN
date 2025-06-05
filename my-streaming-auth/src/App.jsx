@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiLogOut, FiSend, FiKey } from 'react-icons/fi';
 import { supabase } from './supabaseClient';
 import ParticlesBackground from './components/ParticlesBackground';
-import DashboardPage from './pages/DashboardPage'; // Импортируем DashboardPage
+import DashboardPage from './pages/DashboardPage';
 
 // --- Styled Components и ключевые кадры (для AuthPage и AppContainer) ---
 const gradientAnimation = keyframes`
@@ -320,21 +320,30 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
   };
 
   useEffect(() => {
+    // Этот useEffect теперь будет реагировать ТОЛЬКО на изменение initialAuthMode из пропсов.
+    // Если App хочет принудительно сменить режим (например, на 'updatePassword'), он это сделает.
     if (initialAuthMode !== authMode) {
         setAuthMode(initialAuthMode);
-    }
-    if (initialAuthMode !== 'updatePassword' || !message.text ) {
-        if (!(authMode === 'updatePassword' && message.type === 'error')) {
-            // setMessage({ text: '', type: '' }); // Пока не сбрасываем, чтобы видеть сообщения
+        // Сбрасываем сообщение только если это не ошибка, оставшаяся от предыдущей попытки в updatePassword
+        if (initialAuthMode !== 'updatePassword' || !message.text || message.type !== 'error') {
+             setMessage({ text: '', type: '' });
         }
     }
-  }, [initialAuthMode, authMode, message.text, message.type]);
+  }, [initialAuthMode]); // Убрали authMode и message из зависимостей
 
   useEffect(() => {
-    if (authMode !== 'updatePassword' && !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
-        setMessage({ text: '', type: '' });
+    // Не сбрасываем сообщение, если оно только что было установлено (например, успех обновления пароля)
+    // или если это ошибка в режиме updatePassword
+    if (!(authMode === 'updatePassword' && message.type === 'error') && 
+        !(authMode === 'signIn' && message.type === 'success' && message.text.includes("Пароль успешно обновлен"))) {
+        // Также не сбрасываем, если это сообщение об ошибке валидации перед отправкой
+        if(!loading && message.text && (message.text.includes("Пожалуйста, введите") || message.text.includes("Пароли не совпадают") || message.text.includes("Пароль должен содержать"))) {
+            // не сбрасывать
+        } else {
+            setMessage({ text: '', type: '' });
+        }
     }
-  }, [authMode]);
+  }, [authMode]); // Зависит только от локального authMode
 
 
   const handleAuthAction = async (e) => {
@@ -443,18 +452,21 @@ const AuthPage = ({ onAuthSuccess, initialAuthMode = 'signIn', onPasswordUpdated
   const confirmPasswordInputId = "confirm-password-main";
   const emailResetInputId = "email-reset";
 
-  const switchToMode = (e, mode) => {
+  const switchToMode = (e, newMode) => {
     e.preventDefault();
-    const previousEmailForSignIn = (authMode === 'updatePassword' && mode === 'signIn') ? email : '';
-    setAuthMode(mode);
+    const previousEmail = (authMode === 'updatePassword' && newMode === 'signIn') ? email : '';
     
-    if (previousEmailForSignIn) {
-      setEmail(previousEmailForSignIn);
-    } else if (mode !== 'resetPassword') {
+    setAuthMode(newMode); // Просто устанавливаем новый локальный режим
+    
+    if (previousEmail) {
+      setEmail(previousEmail);
+    } else if (newMode !== 'resetPassword' && newMode !== 'updatePassword') { 
+      // Не очищаем email для resetPassword или если перешли в updatePassword (email там не используется)
       setEmail('');
     }
     setPassword('');
     setConfirmPassword('');
+    // setMessage({ text: '', type: '' }); // Сброс сообщения теперь в useEffect по authMode
   };
 
   let cardTitle = "Добро пожаловать!";
