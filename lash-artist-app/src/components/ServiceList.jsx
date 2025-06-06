@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import BookingCalendar from './BookingCalendar'; // <<< Импортируем календарь
+import BookingCalendar from './BookingCalendar';
 import './ServiceList.css';
-// Добавим стили для модального контейнера, можно вынести в отдельный файл, но пока тут
 import './BookingModal.css'; 
-
 
 // Иконка часов (outline)
 const ClockIcon = () => (
@@ -31,14 +29,22 @@ const AnimatedLoadingText = ({ text }) => {
   );
 };
 
-function ServiceList() {
+// Принимаем userProfile и session как пропсы
+function ServiceList({ userProfile, session }) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Состояние для управления видимостью календаря/формы записи и выбранной услуги
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
+
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  
+  const [finalSelectedDate, setFinalSelectedDate] = useState(null);
+  const [finalSelectedTime, setFinalSelectedTime] = useState(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchServices() {
@@ -50,41 +56,145 @@ function ServiceList() {
           .select('id, name, description, price, duration_minutes, image_url')
           .order('price', { ascending: true });
 
-        if (fetchError) {
-          console.error('Ошибка при загрузке услуг:', fetchError);
-          setError(fetchError.message);
-        } else {
-          setServices(data);
-        }
+        if (fetchError) throw fetchError;
+        setServices(data);
       } catch (err) {
-        console.error('Неожиданная ошибка:', err);
-        setError('Произошла непредвиденная ошибка при загрузке услуг.');
+        console.error('Ошибка при загрузке услуг:', err.message);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     }
     fetchServices();
   }, []);
+  
+  // Обновляем поля, если userProfile изменился (например, после входа/выхода)
+  // или если открывается модальное окно
+  useEffect(() => {
+    if (showBookingModal) { // Логика предзаполнения только когда модалка открыта
+        if (session && userProfile) {
+            setClientName(userProfile.full_name || '');
+            setClientPhone(userProfile.phone || '');
+        } else {
+            // Для гостя или если профиль неполный, поля будут пустыми (сброс в handleBookServiceClick)
+        }
+    }
+  }, [userProfile, session, showBookingModal]);
+
 
   const handleBookServiceClick = (service) => {
     setSelectedServiceForBooking(service);
-    setShowBookingModal(true);
-    // Плавный скролл к началу модального окна или верху страницы для лучшего UX
-    // Можно также заблокировать скролл основной страницы при открытом модальном окне
-    const bookingSection = document.getElementById('booking-modal-section');
-    if (bookingSection) {
-        bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Сначала предзаполняем или сбрасываем поля
+    if (session && userProfile) {
+      setClientName(userProfile.full_name || '');
+      setClientPhone(userProfile.phone || '');
     } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      setClientName('');
+      setClientPhone('');
     }
+
+    setFinalSelectedDate(null);
+    setFinalSelectedTime(null);
+    setIsSubmitting(false); 
+    setShowBookingModal(true); // Показываем модалку ПОСЛЕ установки начальных состояний
+    
+    // Скролл к модалке
+    // Оборачиваем в setTimeout, чтобы DOM успел обновиться с showBookingModal=true
+    setTimeout(() => {
+        const bookingSection = document.getElementById('booking-modal-section');
+        if (bookingSection) {
+            bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, 0);
   };
 
   const handleCloseBookingModal = () => {
+    if (isSubmitting) return; 
     setShowBookingModal(false);
     setSelectedServiceForBooking(null);
   };
 
-  if (loading) {
+  const handleDateTimeSelectionConfirmed = (date, time) => {
+    setFinalSelectedDate(date);
+    setFinalSelectedTime(time); 
+  };
+
+  const calculateEndTime = (startTime, durationMinutes) => {
+    if (!startTime || typeof durationMinutes !== 'number') return null;
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalStartMinutes = hours * 60 + minutes;
+    const totalEndMinutes = totalStartMinutes + durationMinutes;
+    const endHours = Math.floor(totalEndMinutes / 60);
+    const endMinutes = totalEndMinutes % 60;
+    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}:00`;
+  };
+
+  const handleBookingConfirm = async () => {
+    if (!clientName.trim() || !clientPhone.trim()) {
+        alert('Пожалуйста, заполните ваше имя и телефон.');
+        return;
+    }
+    if (!finalSelectedDate || !finalSelectedTime || !selectedServiceForBooking) {
+        alert('Пожалуйста, выберите услугу, дату и время для записи.');
+        return;
+    }
+
+    setIsSubmitting(true);
+
+    const bookingEndTime = calculateEndTime(finalSelectedTime, selectedServiceForBooking.duration_minutes);
+    if (!bookingEndTime) {
+        alert('Не удалось рассчитать время окончания услуги.');
+        setIsSubmitting(false);
+        return;
+    }
+
+    const bookingData = {
+      service_id: selectedServiceForBooking.id,
+      client_name: clientName.trim(),
+      client_phone: clientPhone.trim(),
+      booking_date: finalSelectedDate.toISOString().split('T')[0], 
+      booking_start_time: `${finalSelectedTime}:00`, 
+      booking_end_time: bookingEndTime,
+      duration_minutes: selectedServiceForBooking.duration_minutes,
+      price: selectedServiceForBooking.price,
+      status: 'pending', 
+    };
+    
+    // Если пользователь авторизован, добавляем его ID
+    if (session && session.user) {
+      // Убедись, что в таблице `bookings` есть столбец user_id UUID NULLABLE REFERENCES auth.users(id)
+      // Если его нет, этот INSERT вызовет ошибку, или нужно убрать это поле из bookingData
+      // bookingData.user_id = session.user.id; 
+    }
+    
+    console.log("Отправка данных бронирования в Supabase:", bookingData);
+
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([bookingData])
+        .select(); 
+
+      if (error) {
+        console.error('Ошибка при создании бронирования в Supabase:', error);
+        alert(`Не удалось создать запись: ${error.message}`);
+      } else {
+        console.log('Бронирование успешно создано в Supabase:', data);
+        alert('Ваша заявка на запись принята! Мастер свяжется с вами для подтверждения.');
+        handleCloseBookingModal(); 
+      }
+    } catch (err) {
+      console.error('Неожиданная ошибка при попытке бронирования:', err);
+      alert('Произошла неожиданная ошибка. Пожалуйста, попробуйте снова.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading && !showBookingModal) {
     return (
       <div className="loading-container">
         <AnimatedLoadingText text="Загрузка услуг..." />
@@ -92,17 +202,21 @@ function ServiceList() {
     );
   }
 
-  if (error) {
+  if (error && !showBookingModal) { 
     return <p className="error-message">Ошибка загрузки услуг: {error}</p>;
   }
 
-  if (services.length === 0 && !showBookingModal) { // Не показываем, если открыто модальное
+  if (services.length === 0 && !loading && !error && !showBookingModal) {
     return <p className="info-message">Пока нет доступных услуг.</p>;
   }
 
   return (
     <>
-      <section id="services" className={`service-list-section ${showBookingModal ? 'hidden-when-modal-active' : ''}`}>
+      <section 
+        id="services" 
+        className={`service-list-section ${showBookingModal ? 'modal-open-behind' : ''}`}
+        aria-hidden={showBookingModal}
+      >
         <h2 className="section-title">Наши Услуги</h2>
         <div className="service-list-grid">
           {services.map((service, index) => (
@@ -128,6 +242,7 @@ function ServiceList() {
                 <button 
                   className="service-card-button-cta" 
                   onClick={() => handleBookServiceClick(service)}
+                  disabled={showBookingModal || loading} 
                 >
                   Записаться
                 </button>
@@ -137,22 +252,64 @@ function ServiceList() {
         </div>
       </section>
 
-      {/* Модальное окно/секция для бронирования */}
       {showBookingModal && selectedServiceForBooking && (
-        // Обертка для секции, чтобы к ней можно было скроллить
-        <div id="booking-modal-section"> 
+        <div id="booking-modal-section" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title"> 
             <div className="booking-modal-overlay" onClick={handleCloseBookingModal}></div>
             <div className="booking-modal-content">
-                <button className="booking-modal-close-button" onClick={handleCloseBookingModal}>
+                <button 
+                    className="booking-modal-close-button" 
+                    onClick={handleCloseBookingModal}
+                    aria-label="Закрыть окно записи"
+                    disabled={isSubmitting}
+                >
                     ×
                 </button>
                 <div className="booking-modal-service-info">
-                    <h3>Запись на услугу: {selectedServiceForBooking.name}</h3>
+                    <h3 id="booking-modal-title">Запись на услугу: {selectedServiceForBooking.name}</h3>
                     <p>Длительность: {selectedServiceForBooking.duration_minutes} мин. | Цена: {selectedServiceForBooking.price} ₽</p>
                 </div>
-                {/* Передаем ID услуги в календарь, если он понадобится для фильтрации слотов */}
-                <BookingCalendar selectedService={selectedServiceForBooking} />
-                {/* Здесь позже будет форма для данных клиента */}
+                
+                <BookingCalendar 
+                    selectedService={selectedServiceForBooking} 
+                    onDateTimeConfirm={handleDateTimeSelectionConfirmed}
+                />
+
+                <div className="booking-form-client-details">
+                    <h4>Ваши контактные данные:</h4>
+                    <div className="form-group">
+                        <label htmlFor="clientName">Имя</label>
+                        <input 
+                            type="text" 
+                            id="clientName" 
+                            value={clientName}
+                            onChange={(e) => setClientName(e.target.value)}
+                            placeholder="Как к вам обращаться?"
+                            required 
+                            aria-required="true"
+                            disabled={isSubmitting || (session && !!userProfile?.full_name)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="clientPhone">Телефон</label>
+                        <input 
+                            type="tel" 
+                            id="clientPhone" 
+                            value={clientPhone}
+                            onChange={(e) => setClientPhone(e.target.value)}
+                            placeholder="+7 (___) ___-__-__"
+                            required 
+                            aria-required="true"
+                            disabled={isSubmitting || (session && !!userProfile?.phone)}
+                        />
+                    </div>
+                    <button 
+                        className="booking-confirm-button" 
+                        onClick={handleBookingConfirm}
+                        disabled={!finalSelectedDate || !finalSelectedTime || !clientName.trim() || !clientPhone.trim() || isSubmitting}
+                    >
+                        {isSubmitting ? 'Обработка...' : 'Записаться'}
+                    </button>
+                </div>
             </div>
         </div>
       )}

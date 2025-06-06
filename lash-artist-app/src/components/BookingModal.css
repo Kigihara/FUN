@@ -104,3 +104,134 @@
       font-size: 0.9rem;
     }
   }
+
+
+
+.time-slot-button.selected {
+    background-color: #E2BCC7; /* Темнее розовый, как активный элемент */
+    color: #FFFFFF;
+    border-color: #E2BCC7;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) inset; /* Небольшая внутренняя тень для эффекта "нажатия" */
+  }
+  
+  .info-message { /* Для сообщения "Пожалуйста, выберите услугу..." */
+    text-align: center;
+    font-size: 1rem;
+    color: #718096;
+    padding: 1rem 0;
+  }
+
+  /* ... другие стили модального окна ... */
+
+.booking-form-client-details {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E0E0E0;
+  }
+  
+  .booking-form-client-details h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    display: block;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #424242;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="tel"],
+  .form-group input[type="email"] { /* на будущее */
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    font-family: 'Open Sans', sans-serif;
+    color: #424242;
+    background-color: #fff;
+    border: 1px solid #D4CFC7; /* Limestone */
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .form-group input[type="text"]:focus,
+  .form-group input[type="tel"]:focus,
+  .form-group input[type="email"]:focus {
+    outline: none;
+    border-color: #FAD2E1; /* Акцентный розовый */
+    box-shadow: 0 0 0 2px rgba(250, 210, 225, 0.3); 
+  }
+  
+  .booking-confirm-button {
+    display: block;
+    width: 100%;
+    max-width: 300px; /* Ограничим ширину кнопки */
+    margin: 1.5rem auto 0 auto; /* Отступы и центрирование */
+    padding: 0.9rem 1.5rem;
+    background-color: #FAD2E1; 
+    color: #424242; 
+    border: 1px solid #FAD2E1; 
+    border-radius: 8px; 
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s ease-out;
+    box-shadow: 0 2px 4px rgba(250, 210, 225, 0.2); 
+  }
+  
+  .booking-confirm-button:hover {
+    background-color: #E2BCC7; 
+    border-color: #E2BCC7;
+    color: #FFFFFF; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(226, 188, 199, 0.3);
+  }
+  
+  .booking-confirm-button:disabled {
+    background-color: #E0E0E0; /* Silver Sand */
+    border-color: #E0E0E0;
+    color: #A0A0A0;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  
+  /* Адаптивность для формы */
+  @media (max-width: 768px) {
+    .booking-form-client-details h4 {
+      font-size: 1.15rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="tel"] {
+      padding: 0.7rem 0.9rem;
+      font-size: 0.95rem;
+    }
+    .booking-confirm-button {
+      font-size: 0.9rem;
+      padding: 0.8rem 1.2rem;
+    }
+  }
+
+  /* ... существующие стили ... */
+
+.modal-open-behind {
+    /* filter: blur(3px); */ /* Вариант с размытием */
+    /* opacity: 0.5; */ /* Вариант с затемнением */
+    /* Эти стили могут влиять на производительность, особенно blur */
+    /* Простой вариант - сделать секцию неактивной для событий мыши */
+    pointer-events: none;
+  }

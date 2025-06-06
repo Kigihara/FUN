@@ -1,141 +1,148 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css'; // Стили по умолчанию
-import './BookingCalendar.css'; // Наши кастомные стили
+import 'react-calendar/dist/Calendar.css';
+import './BookingCalendar.css';
 import { supabase } from '../supabaseClient';
 
-// Принимаем selectedService как пропс
-function BookingCalendar({ selectedService }) { 
+// ... (вспомогательные функции timeToMinutes, minutesToTime остаются без изменений)
+const timeToMinutes = (timeStr) => {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const minutesToTime = (totalMinutes) => {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+
+// Добавляем onDateTimeConfirm в пропсы
+function BookingCalendar({ selectedService, onDateTimeConfirm }) { 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [availableDates, setAvailableDates] = useState({}); // Изменили на объект для удобного доступа
+  const [masterAvailability, setMasterAvailability] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
   const [selectedDate, setSelectedDate] = useState(null);
-  const [availableTimesForSelectedDate, setAvailableTimesForSelectedDate] = useState([]);
+  const [generatedTimeSlots, setGeneratedTimeSlots] = useState([]);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
 
-  // Выводим в консоль выбранную услугу, чтобы убедиться, что она передается
-  // useEffect(() => {
-  //   if (selectedService) {
-  //     console.log("Выбранная услуга в BookingCalendar:", selectedService);
-  //   }
-  // }, [selectedService]);
-
-  // Загрузка доступных дат и времени
+  // ... (useEffect для fetchMasterAvailability остается без изменений)
   useEffect(() => {
-    const fetchAvailableSlots = async () => {
+    const fetchMasterAvailability = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Получаем все НЕ забронированные записи из availability
-        // На будущее: здесь можно будет фильтровать по master_id, если их несколько
         const { data, error: fetchError } = await supabase
           .from('availability')
-          .select('date, start_time, end_time, is_booked')
-          .eq('is_booked', false)
-          // Опционально: можно добавить фильтр по дате, чтобы не грузить слишком много данных
-          // .gte('date', new Date().toISOString().split('T')[0]) // Начиная с сегодняшнего дня
+          .select('date, start_time, end_time')
+          .eq('is_booked', false);
 
-        if (fetchError) {
-          throw fetchError;
-        }
-        
-        // Группируем слоты по датам
-        // Ключ - строка даты 'YYYY-MM-DD', значение - массив объектов {start, end}
-        const slotsByDate = data.reduce((acc, slot) => {
-          const dateStr = slot.date; // Supabase возвращает дату в формате YYYY-MM-DD
-          if (!acc[dateStr]) {
-            acc[dateStr] = [];
-          }
-          // TODO: На следующих этапах здесь нужно будет учитывать длительность selectedService
-          // и генерировать конкретные временные слоты, а не просто интервалы.
-          // Пока что просто сохраняем интервалы как есть.
-          acc[dateStr].push({ 
-            start: slot.start_time, 
-            end: slot.end_time 
-            // Можно добавить service_duration_minutes: selectedService?.duration_minutes если нужно уже сейчас
-          });
-          // Сортируем слоты по времени начала
+        if (fetchError) throw fetchError;
+
+        const availabilityByDate = data.reduce((acc, slot) => {
+          const dateStr = slot.date;
+          if (!acc[dateStr]) acc[dateStr] = [];
+          acc[dateStr].push({ start: slot.start_time, end: slot.end_time });
           acc[dateStr].sort((a, b) => a.start.localeCompare(b.start));
           return acc;
         }, {});
-        
-        setAvailableDates(slotsByDate);
-
+        setMasterAvailability(availabilityByDate);
       } catch (err) {
-        console.error('Ошибка при загрузке доступных слотов:', err);
+        console.error('Ошибка при загрузке доступности мастера:', err);
         setError('Не удалось загрузить расписание. Попробуйте позже.');
       } finally {
         setLoading(false);
       }
     };
+    fetchMasterAvailability();
+  }, []);
 
-    fetchAvailableSlots();
-  }, []); // Пока что массив зависимостей пуст, загружаем один раз. Позже можно добавить selectedService, если логика будет зависеть от него
+
+  const generateSlotsForDate = useCallback((date, serviceDuration) => {
+    // ... (логика generateSlotsForDate остается без изменений)
+    if (!date || !serviceDuration || !masterAvailability) {
+      setGeneratedTimeSlots([]);
+      return;
+    }
+
+    const dateString = date.toISOString().split('T')[0];
+    const dayAvailabilityIntervals = masterAvailability[dateString] || [];
+    const slots = [];
+
+    for (const interval of dayAvailabilityIntervals) {
+      let currentSlotStartMinutes = timeToMinutes(interval.start);
+      const intervalEndMinutes = timeToMinutes(interval.end);
+
+      while (currentSlotStartMinutes + serviceDuration <= intervalEndMinutes) {
+        slots.push(minutesToTime(currentSlotStartMinutes));
+        currentSlotStartMinutes += 30; 
+      }
+    }
+    setGeneratedTimeSlots(slots.filter((slot, index, self) => self.indexOf(slot) === index));
+  }, [masterAvailability]);
+
+  useEffect(() => {
+    if (selectedDate && selectedService?.duration_minutes) {
+      generateSlotsForDate(selectedDate, selectedService.duration_minutes);
+      setSelectedTimeSlot(null); 
+      if (onDateTimeConfirm) { // Сбрасываем подтвержденное время в родителе, если дата сменилась
+         onDateTimeConfirm(selectedDate, null);
+      }
+    } else {
+      setGeneratedTimeSlots([]);
+       if (onDateTimeConfirm) { // Сбрасываем и если услуга убрана
+         onDateTimeConfirm(null, null);
+      }
+    }
+  }, [selectedDate, selectedService, generateSlotsForDate, onDateTimeConfirm]);
+
 
   const handleDateChange = (date) => {
     setCurrentDate(date);
-    setSelectedDate(date); 
-    
-    const dateString = date.toISOString().split('T')[0]; 
-    if (availableDates[dateString]) {
-        // TODO: Фильтрация и генерация слотов на основе selectedService.duration_minutes
-        // Пока что просто отображаем все доступные интервалы для этой даты
-        setAvailableTimesForSelectedDate(availableDates[dateString]);
-    } else {
-        setAvailableTimesForSelectedDate([]);
-    }
+    setSelectedDate(date);
+    // setSelectedTimeSlot(null); // Уже делается в useEffect
+    // if (onDateTimeConfirm) { // Сброс времени в родителе при смене даты
+    //   onDateTimeConfirm(date, null); 
+    // }
   };
   
-  // Функция для стилизации дней в календаре
+  // ... (tileClassName, tileDisabled остаются без изменений)
   const tileClassName = ({ date, view }) => {
-    if (view === 'month') {
+    if (view === 'month' && masterAvailability) {
       const dateString = date.toISOString().split('T')[0];
-      // Если для этой даты есть доступные слоты в нашем объекте availableDates
-      if (availableDates[dateString] && availableDates[dateString].length > 0) {
-        return 'available-day';
+      if (masterAvailability[dateString] && masterAvailability[dateString].length > 0) {
+        return 'available-day-master';
       }
     }
     return null;
   };
 
-  // Функция для блокировки дней
   const tileDisabled = ({ date, view }) => {
     if (view === 'month') {
       const today = new Date();
       today.setHours(0, 0, 0, 0); 
-      if (date < today) { // Блокируем прошлые даты
-        return true;
-      }
-      // Дополнительно блокируем дни, для которых нет записи в availableDates
-      // const dateString = date.toISOString().split('T')[0];
-      // if (!availableDates[dateString] || availableDates[dateString].length === 0) {
-      //   return true; // Блокировать, если нет доступных слотов
-      // }
+      if (date < today) return true;
     }
     return false;
   };
 
-  // Обработчик выбора времени (пока просто выводит в консоль)
-  const handleTimeSelect = (timeSlot) => {
-    console.log('Выбран временной слот:', timeSlot);
-    console.log('Для услуги:', selectedService);
-    console.log('На дату:', selectedDate);
-    // Здесь будет логика перехода к следующему шагу - ввод данных клиента и подтверждение
-    alert(`Вы выбрали время: ${timeSlot.start.substring(0,5)} для услуги "${selectedService.name}"`);
+
+  const handleTimeSlotClick = (time) => {
+    setSelectedTimeSlot(time);
+    // Вызываем callback для передачи выбранной даты и времени в родительский компонент
+    if (onDateTimeConfirm && selectedDate) {
+      onDateTimeConfirm(selectedDate, time);
+    }
   };
 
-  if (loading) {
-    return <div className="calendar-loading">Загрузка расписания...</div>;
-  }
-
-  if (error) {
-    return <p className="calendar-error">{error}</p>;
-  }
+  if (loading) return <div className="calendar-loading">Загрузка расписания...</div>;
+  if (error) return <p className="calendar-error">{error}</p>;
 
   return (
-    // Обертку <section> и её ID убрали, т.к. компонент теперь часть модального окна
-    // Заголовок "Выберите дату и время" также убран, он теперь в родительском компоненте
-    <div className="booking-calendar-container"> {/* Добавлен класс для возможной доп. стилизации контейнера */}
+    <div className="booking-calendar-container">
       <div className="calendar-wrapper">
         <Calendar
           onChange={handleDateChange}
@@ -143,34 +150,35 @@ function BookingCalendar({ selectedService }) {
           minDate={new Date()} 
           tileClassName={tileClassName}
           tileDisabled={tileDisabled}
-          // locale="ru-RU" // Раскомментируй, если настроена локализация
           prev2Label={null} 
           next2Label={null}
         />
       </div>
 
-      {selectedDate && (
+      {selectedDate && selectedService && (
         <div className="time-slots-wrapper">
           <h3>
-            Доступное время на {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' /* год убрали для краткости */ })}:
+            Доступное время на {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} для "{selectedService.name}"
           </h3>
-          {availableTimesForSelectedDate.length > 0 ? (
+          {generatedTimeSlots.length > 0 ? (
             <div className="time-slots-grid">
-              {availableTimesForSelectedDate.map((slot, index) => (
+              {generatedTimeSlots.map((time, index) => (
                 <button 
                   key={index} 
-                  className="time-slot-button"
-                  onClick={() => handleTimeSelect(slot)}
+                  className={`time-slot-button ${selectedTimeSlot === time ? 'selected' : ''}`}
+                  onClick={() => handleTimeSlotClick(time)}
                 >
-                  {/* Отображаем только ЧЧ:ММ из start_time */}
-                  {slot.start.substring(0, 5)} 
+                  {time}
                 </button>
               ))}
             </div>
           ) : (
-            <p>На выбранную дату нет доступного времени или все слоты заняты.</p>
+            <p>На выбранную дату нет доступного времени для данной услуги.</p>
           )}
         </div>
+      )}
+      {!selectedService && selectedDate && (
+          <p className="info-message">Пожалуйста, выберите услугу, чтобы увидеть доступное время.</p>
       )}
     </div>
   );
