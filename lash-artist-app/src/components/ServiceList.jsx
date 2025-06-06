@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import BookingCalendar from './BookingCalendar'; // <<< Импортируем календарь
 import './ServiceList.css';
+// Добавим стили для модального контейнера, можно вынести в отдельный файл, но пока тут
+import './BookingModal.css'; 
+
 
 // Иконка часов (outline)
 const ClockIcon = () => (
@@ -32,14 +36,16 @@ function ServiceList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Состояние для управления видимостью календаря/формы записи и выбранной услуги
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
+
   useEffect(() => {
     async function fetchServices() {
       setLoading(true);
       setError(null);
-      // Раскомментируй для теста прелоадера, если нужно:
-      // await new Promise(resolve => setTimeout(resolve, 1500)); 
       try {
-        const { data, error: fetchError } = await supabase // Переименовал error чтобы не конфликтовать с useState
+        const { data, error: fetchError } = await supabase
           .from('services')
           .select('id, name, description, price, duration_minutes, image_url')
           .order('price', { ascending: true });
@@ -57,9 +63,26 @@ function ServiceList() {
         setLoading(false);
       }
     }
-
     fetchServices();
   }, []);
+
+  const handleBookServiceClick = (service) => {
+    setSelectedServiceForBooking(service);
+    setShowBookingModal(true);
+    // Плавный скролл к началу модального окна или верху страницы для лучшего UX
+    // Можно также заблокировать скролл основной страницы при открытом модальном окне
+    const bookingSection = document.getElementById('booking-modal-section');
+    if (bookingSection) {
+        bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCloseBookingModal = () => {
+    setShowBookingModal(false);
+    setSelectedServiceForBooking(null);
+  };
 
   if (loading) {
     return (
@@ -73,47 +96,67 @@ function ServiceList() {
     return <p className="error-message">Ошибка загрузки услуг: {error}</p>;
   }
 
-  if (services.length === 0) {
+  if (services.length === 0 && !showBookingModal) { // Не показываем, если открыто модальное
     return <p className="info-message">Пока нет доступных услуг.</p>;
   }
 
   return (
-    <section id="services" className="service-list-section">
-      <h2 className="section-title">Наши Услуги</h2>
-      <div className="service-list-grid">
-        {services.map((service, index) => (
-          <div key={service.id} className="service-card" style={{ animationDelay: `${index * 0.1}s` }}>
-            {service.image_url && (
-              <div className="service-card-image-wrapper">
-                <img src={service.image_url} alt={service.name} className="service-card-image" />
-              </div>
-            )}
-            <div className="service-card-content">
-              <h3 className="service-card-title">{service.name}</h3>
-              <p className="service-card-description">{service.description || 'Описание отсутствует'}</p>
-              
-              <div className="service-card-meta">
-                <div className="service-detail-item price-item">
-                  <span className="price-value">{service.price}</span>
-                  <span className="price-currency"> ₽</span>
+    <>
+      <section id="services" className={`service-list-section ${showBookingModal ? 'hidden-when-modal-active' : ''}`}>
+        <h2 className="section-title">Наши Услуги</h2>
+        <div className="service-list-grid">
+          {services.map((service, index) => (
+            <div key={service.id} className="service-card" style={{ animationDelay: `${index * 0.1}s` }}>
+              {service.image_url && (
+                <div className="service-card-image-wrapper">
+                  <img src={service.image_url} alt={service.name} className="service-card-image" />
                 </div>
-                <div className="service-detail-item duration-item">
-                  <ClockIcon />
-                  <span>{service.duration_minutes} мин.</span>
+              )}
+              <div className="service-card-content">
+                <h3 className="service-card-title">{service.name}</h3>
+                <p className="service-card-description">{service.description || 'Описание отсутствует'}</p>
+                <div className="service-card-meta">
+                  <div className="service-detail-item price-item">
+                    <span className="price-value">{service.price}</span>
+                    <span className="price-currency"> ₽</span>
+                  </div>
+                  <div className="service-detail-item duration-item">
+                    <ClockIcon />
+                    <span>{service.duration_minutes} мин.</span>
+                  </div>
                 </div>
+                <button 
+                  className="service-card-button-cta" 
+                  onClick={() => handleBookServiceClick(service)}
+                >
+                  Записаться
+                </button>
               </div>
-
-              <button 
-                className="service-card-button-cta" 
-                onClick={(e) => { e.preventDefault(); alert('Переход к форме записи (в разработке)'); }}
-              >
-                Записаться
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
-    </section>
+          ))}
+        </div>
+      </section>
+
+      {/* Модальное окно/секция для бронирования */}
+      {showBookingModal && selectedServiceForBooking && (
+        // Обертка для секции, чтобы к ней можно было скроллить
+        <div id="booking-modal-section"> 
+            <div className="booking-modal-overlay" onClick={handleCloseBookingModal}></div>
+            <div className="booking-modal-content">
+                <button className="booking-modal-close-button" onClick={handleCloseBookingModal}>
+                    ×
+                </button>
+                <div className="booking-modal-service-info">
+                    <h3>Запись на услугу: {selectedServiceForBooking.name}</h3>
+                    <p>Длительность: {selectedServiceForBooking.duration_minutes} мин. | Цена: {selectedServiceForBooking.price} ₽</p>
+                </div>
+                {/* Передаем ID услуги в календарь, если он понадобится для фильтрации слотов */}
+                <BookingCalendar selectedService={selectedServiceForBooking} />
+                {/* Здесь позже будет форма для данных клиента */}
+            </div>
+        </div>
+      )}
+    </>
   );
 }
 

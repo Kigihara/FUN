@@ -1,0 +1,186 @@
+/* Добавляем анимацию, если она не глобальная. Можно скопировать из ServiceList.css */
+@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .contact-section {
+    padding: 3rem 0;
+    background-color: #F0EFEB; /* Основной фон страницы */
+    border-top: 1px solid rgba(224, 224, 224, 0.5); 
+    overflow-x: hidden; /* Предотвращение горизонтального скролла из-за анимаций */
+  }
+  
+  .contact-section-title {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    color: #212121;
+    margin-bottom: 0.75rem;
+    opacity: 0; /* Для анимации */
+    animation: fadeInUp 0.6s 0.1s ease-out forwards; /* Анимация */
+  }
+  
+  .contact-section-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #5E5C5B;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0; /* Для анимации */
+    animation: fadeInUp 0.6s 0.3s ease-out forwards; /* Анимация с задержкой */
+  }
+  
+  .contact-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    background-color: #FFFFFF;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.05),
+                0px 3px 10px rgba(0, 0, 0, 0.03);
+    opacity: 0; /* Для анимации */
+    animation: fadeInUp 0.7s 0.5s ease-out forwards; /* Анимация с большей задержкой */
+  }
+  
+  .contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Немного уменьшил gap для компактности */
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: flex-start; 
+    gap: 1rem;
+    padding: 0.5rem 0; /* Небольшой вертикальный паддинг для лучшего hover-ощущения */
+    border-radius: 6px; /* Для возможного фона при hover */
+    transition: background-color 0.3s ease; /* Плавный переход для фона */
+  }
+  
+  /* Эффекты при наведении на весь .contact-item */
+  .contact-item:hover {
+    /* Можно добавить очень легкий фон, если хочется выделить весь элемент */
+    /* background-color: rgba(250, 210, 225, 0.08); */
+  }
+  
+  .contact-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    color: #FAD2E1; 
+    margin-top: 0.2em; 
+    transition: color 0.3s ease, transform 0.3s ease; /* Плавные переходы для иконки */
+  }
+  
+  .contact-item:hover .contact-icon {
+    color: #E2BCC7; /* Более темный/насыщенный розовый при наведении на элемент */
+    transform: scale(1.1); /* Легкое увеличение иконки */
+  }
+  
+  .contact-item-text h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212121;
+    margin-bottom: 0.35rem;
+    transition: color 0.3s ease; /* Плавный переход для цвета заголовка */
+  }
+  
+  .contact-item:hover .contact-item-text h4 {
+    color: #FAD2E1; /* Розовый для заголовка при наведении на элемент */
+  }
+  
+  .contact-item-text p,
+  .contact-item-text a {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #424242;
+    text-decoration: none;
+  }
+  
+  .contact-item-text a {
+    color: #B1A392; 
+    font-weight: 500;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+  }
+  
+  /* Стиль ссылки при наведении на саму ссылку (остается как было) */
+  .contact-item-text a:hover {
+    color: #FAD2E1; 
+    text-decoration: underline;
+  }
+  
+  /* Дополнительно: если мы хотим, чтобы ссылка также меняла цвет при наведении на ВЕСЬ .contact-item */
+  .contact-item:hover .contact-item-text a {
+     color: #FAD2E1; /* Синхронизируем цвет ссылки с ховером на весь элемент */
+     /* text-decoration: none; /* Убираем подчеркивание, если оно не нужно при ховере на родителя */
+  }
+  /* Если подчеркивание при ховере на родителя не нужно, а только при ховере на саму ссылку, то предыдущий блок можно настроить или оставить как есть,
+     так как .contact-item-text a:hover будет специфичнее и переопределит цвет для ховера самой ссылки.
+     Я оставил так, чтобы при наведении на весь элемент ссылка становилась розовой,
+     а при наведении конкретно на ссылку - добавлялось подчеркивание. Это хороший UX. */
+  
+  
+  .contact-item-text p {
+    margin-bottom: 0.25rem;
+  }
+  .contact-item-text p:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Заглушка для карты, если понадобится */
+  .contact-map-placeholder {
+    background-color: #E2ECE9; 
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: #5E5C5B;
+    font-style: italic;
+    min-height: 250px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .contact-section-title {
+      font-size: 2rem;
+    }
+    .contact-section-subtitle {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+    .contact-content-wrapper {
+      padding: 1.5rem;
+    }
+    .contact-details {
+      gap: 1.25rem;
+    }
+    .contact-item {
+      gap: 0.8rem;
+      padding: 0.3rem 0;
+    }
+    .contact-icon {
+      width: 20px;
+      height: 20px;
+    }
+    .contact-item-text h4 {
+      font-size: 1rem;
+    }
+    .contact-item-text p,
+    .contact-item-text a {
+      font-size: 0.9rem;
+    }
+  }

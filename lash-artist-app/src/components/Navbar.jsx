@@ -33,25 +33,25 @@ function Navbar() {
         </div>
 
         <ul className={`nav-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-          <li className="nav-item">
+        <li className="nav-item">
+            {/* Ссылка "Запись онлайн" теперь может вести к секции услуг или будущей общей странице записи */}
             <a href="#services" className="nav-link" onClick={(e) => scrollToSection(e, 'services')}>
-              Услуги
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#booking" className="nav-link" onClick={(e) => { e.preventDefault(); alert('Раздел записи в разработке!'); if(isMobileMenuOpen) setIsMobileMenuOpen(false);}}>
               Запись онлайн
             </a>
           </li>
-          {/* === ИЗМЕНЕНИЕ ЗДЕСЬ === */}
+          <li className="nav-item">
+            {/* ИЗМЕНЕНИЕ ЗДЕСЬ */}
+            <a href="#booking" className="nav-link" onClick={(e) => scrollToSection(e, 'booking')}>
+              Запись онлайн
+            </a>
+          </li>
           <li className="nav-item">
             <a href="#about-me" className="nav-link" onClick={(e) => scrollToSection(e, 'about-me')}>
               О мастере
             </a>
           </li>
-          {/* === КОНЕЦ ИЗМЕНЕНИЯ === */}
           <li className="nav-item">
-            <a href="#contact" className="nav-link" onClick={(e) => { e.preventDefault(); alert('Раздел "Контакты" в разработке!'); if(isMobileMenuOpen) setIsMobileMenuOpen(false);}}>
+            <a href="#contact" className="nav-link" onClick={(e) => scrollToSection(e, 'contact')}>
               Контакты
             </a>
           </li>

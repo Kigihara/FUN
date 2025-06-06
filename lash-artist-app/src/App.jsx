@@ -2,14 +2,15 @@ import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ServiceList from './components/ServiceList';
-import AboutMe from './components/AboutMe'; // <-- 1. Импортируем компонент
+import AboutMe from './components/AboutMe';
+import Contact from './components/Contact';
+// import BookingCalendar from './components/BookingCalendar'; // <<< ЗАКОММЕНТИРУЙ ИЛИ УДАЛИ ЭТОТ ИМПОРТ
 import { Icon24LogoVk } from '@vkontakte/icons';
 
 import './App.css';
 
 function App() {
   const SocialLinks = () => (
-    // ... (код SocialLinks остается без изменений) ...
     <div className="social-links">
       {/* Instagram */}
       <a href="https://instagram.com/ВАШ_ПРОФИЛЬ" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -42,12 +43,16 @@ function App() {
       <Hero />
 
       <main className="app-main">
-        {/* Контейнер для ServiceList уже есть внутри App.jsx */}
-        <div className="container"> 
-          <ServiceList />
+        <div className="container">
+          {/* ServiceList теперь будет управлять отображением BookingCalendar */}
+          <ServiceList /> 
         </div>
+        
+        {/* <BookingCalendar /> {/* <<< УБИРАЕМ ОТСЮДА */}
 
-        <AboutMe /> {/* <-- 2. Добавляем компонент сюда */}
+        <AboutMe />
+        
+        <Contact /> 
       </main>
 
       <footer className="app-footer">

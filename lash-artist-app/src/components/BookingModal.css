@@ -1,0 +1,106 @@
+/* Стили для затемнения фона и скрытия основной секции услуг */
+.hidden-when-modal-active {
+    /* display: none; */ /* Можно просто скрыть, или добавить эффект размытия/затемнения */
+    /* filter: blur(3px); */
+    /* opacity: 0.7; */
+    /* pointer-events: none; */ /* Чтобы нельзя было взаимодействовать с фоном */
+  }
+  
+  .booking-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1050; /* Должен быть выше Navbar */
+    /* animation: fadeInOverlay 0.3s ease-out; */ /* Плавное появление оверлея */
+  }
+  
+  .booking-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #FFFFFF;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    z-index: 1051; /* Выше оверлея */
+    width: 90%;
+    max-width: 700px; /* Максимальная ширина модального окна */
+    max-height: 90vh; /* Максимальная высота */
+    overflow-y: auto; /* Прокрутка, если контент не влезает */
+    /* animation: slideInModal 0.4s ease-out; */ /* Плавное появление контента */
+  }
+  
+  .booking-modal-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+  }
+  .booking-modal-close-button:hover {
+    color: #FAD2E1;
+  }
+  
+  .booking-modal-service-info {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #E0E0E0;
+    text-align: center;
+  }
+  
+  .booking-modal-service-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    color: #212121;
+    margin-bottom: 0.5rem;
+  }
+  
+  .booking-modal-service-info p {
+    font-size: 1rem;
+    color: #5E5C5B;
+  }
+  
+  /* Анимации (можно добавить позже для большей плавности) */
+  /* @keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideInModal {
+    from { opacity: 0; transform: translate(-50%, -45%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+  } */
+  
+  
+  /* В BookingCalendar.css заголовок секции (.booking-section-title) можно будет либо убрать, 
+     либо стилизовать по-другому, так как он теперь внутри модального окна */
+     
+  @media (max-width: 768px) {
+    .booking-modal-content {
+      width: 95%;
+      padding: 1.5rem;
+      top: 0; /* Для мобильных может быть лучше сверху */
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transform: none;
+      border-radius: 0;
+      max-height: 100vh; /* Растягиваем на весь экран */
+    }
+    .booking-modal-service-info h3 {
+      font-size: 1.3rem;
+    }
+     .booking-modal-service-info p {
+      font-size: 0.9rem;
+    }
+  }

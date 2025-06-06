@@ -1,0 +1,237 @@
+.booking-section {
+    padding: 3rem 0;
+    background-color: #FFFFFF; /* Белый фон для этой секции */
+  }
+  
+  .booking-section-title {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    color: #212121;
+    margin-bottom: 2rem;
+  }
+  
+  .calendar-wrapper {
+    max-width: 450px; /* Ограничиваем ширину календаря */
+    margin: 0 auto 2rem auto;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.07),
+                0px 3px 10px rgba(0, 0, 0, 0.04);
+  }
+  
+  /* Стилизация react-calendar */
+  .react-calendar {
+    width: 100%;
+    border: none;
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.5em; /* Увеличим межстрочный интервал для читаемости */
+  }
+  
+  .react-calendar__navigation button {
+    color: #FAD2E1; /* Розовый для стрелок навигации */
+    min-width: 44px;
+    background: none;
+    font-size: 1.2rem; /* Увеличим размер стрелок */
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .react-calendar__navigation button:enabled:hover,
+  .react-calendar__navigation button:enabled:focus {
+    background-color: #F0EFEB; /* Фон при наведении на стрелки */
+  }
+  
+  .react-calendar__navigation__label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600 !important; /* !important нужен из-за специфики библиотеки */
+    font-size: 1.1rem !important;
+    color: #212121;
+  }
+  .react-calendar__navigation__label:enabled:hover,
+  .react-calendar__navigation__label:enabled:focus {
+      background-color: transparent !important; /* Убираем фон при наведении на название месяца */
+  }
+  
+  
+  .react-calendar__month-view__weekdays__weekday {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    color: #5E5C5B; /* Цвет дней недели */
+    text-decoration: none; /* Убираем подчеркивание */
+    padding-bottom: 0.5em;
+    abbr { /* Обращаемся к тегу abbr внутри */
+      text-decoration: none !important;
+    }
+  }
+  
+  .react-calendar__tile {
+    padding: 0.75em 0.5em; /* Внутренние отступы для ячеек */
+    background: none;
+    border-radius: 8px; /* Скругление для ячеек */
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+    color: #424242;
+    font-weight: 500;
+  }
+  
+  .react-calendar__tile:disabled {
+    background-color: #f7f7f7; /* Более светлый фон для неактивных дней */
+    color: #b0b0b0; /* Тусклый цвет для текста неактивных дней */
+    cursor: not-allowed;
+  }
+  
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background-color: #F0EFEB; /* Фон при наведении на активный день */
+    /* color: #FAD2E1; */ /* Можно сделать текст розовым при наведении */
+  }
+  
+  .react-calendar__tile--now { /* Сегодняшний день */
+    background-color: #F0EFEB;
+    /* color: #FAD2E1; */ /* Можно сделать сегодняшний день розовым */
+    font-weight: bold;
+  }
+  .react-calendar__tile--now:enabled:hover,
+  .react-calendar__tile--now:enabled:focus {
+    background-color: #e0d9d2; /* Чуть темнее фон для ховера на сегодняшний день */
+  }
+  
+  .react-calendar__tile--active { /* Выбранный день */
+    background-color: #FAD2E1 !important;
+    color: white !important;
+    font-weight: bold;
+  }
+  .react-calendar__tile--active:enabled:hover,
+  .react-calendar__tile--active:enabled:focus {
+    background-color: #E2BCC7 !important; /* Темнее розовый при наведении на активный */
+  }
+  
+  /* Стили для доступных дней */
+  .available-day {
+    /* Можно добавить точку или другой индикатор */
+    /* position: relative; */
+  }
+  /* Пример индикатора-точки:
+  .available-day::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #FAD2E1;
+  } */
+  
+  /* Если есть доступные слоты, можно сделать рамку или фон ярче */
+  .react-calendar__tile.available-day {
+    /* border: 1px solid #FAD2E1; */ /* Розовая рамка */
+    /* font-weight: bold; */ /* Более жирный шрифт */
+    background-color: #fff0f5; /* Очень легкий розовый фон (Lavender Blush) */
+  }
+  .react-calendar__tile.available-day:enabled:hover,
+  .react-calendar__tile.available-day:enabled:focus {
+    background-color: #ffe4ee; /* Чуть насыщеннее при ховере */
+  }
+  .react-calendar__tile.available-day.react-calendar__tile--active { /* Если доступный день выбран */
+    background-color: #FAD2E1 !important;
+    color: white !important;
+  }
+  
+  
+  .calendar-loading, .calendar-error {
+    text-align: center;
+    font-size: 1.1rem;
+    padding: 2rem;
+    color: #5E5C5B;
+  }
+  .calendar-error {
+    color: #D32F2F;
+  }
+  
+  /* Стили для отображения доступного времени */
+  .time-slots-wrapper {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  .time-slots-wrapper h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    color: #212121;
+    margin-bottom: 1.5rem;
+  }
+  .time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.75rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .time-slot-button {
+    background-color: #FFFFFF;
+    color: #B1A392; /* Greige для текста кнопки */
+    border: 1px solid #E0E0E0; /* Silver Sand рамка */
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  }
+  
+  .time-slot-button:hover {
+    background-color: #FAD2E1;
+    color: #FFFFFF;
+    border-color: #FAD2E1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(250, 210, 225, 0.2);
+  }
+  .time-slot-button:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 4px rgba(250, 210, 225, 0.1);
+  }
+  .time-slot-button:disabled { /* Если слот будет неактивен */
+    background-color: #f5f5f5;
+    color: #cccccc;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  
+  @media (max-width: 768px) {
+    .booking-section-title {
+      font-size: 2rem;
+    }
+    .calendar-wrapper {
+      padding: 1rem;
+    }
+    .react-calendar__navigation button {
+      min-width: 38px;
+      font-size: 1rem;
+    }
+    .react-calendar__navigation__label {
+      font-size: 1rem !important;
+    }
+    .react-calendar__tile {
+      padding: 0.6em 0.3em;
+      font-size: 0.9rem;
+    }
+    .time-slots-wrapper h3 {
+      font-size: 1.25rem;
+    }
+    .time-slots-grid {
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 0.5rem;
+    }
+    .time-slot-button {
+      padding: 0.6rem 0.4rem;
+      font-size: 0.85rem;
+    }
+  }
