@@ -1,10 +1,7 @@
 // src/App.jsx
-// eslint-disable-next-line no-unused-vars
-
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
+import { Toaster, toast } from 'react-hot-toast'; // <<< ИМПОРТИРУЕМ Toaster и toast
 import { supabase } from './supabaseClient';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -18,30 +15,16 @@ import './App.css';
 function App() {
   const [session, setSession] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false); // 'login', 'signup', 'updatePassword'
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log(`[App onAuthStateChange] Event: ${_event}, Session:`, session);
         setSession(session);
-
-        // Если пришло событие PASSWORD_RECOVERY, открываем модальное окно в режиме обновления пароля
-        if (_event === "PASSWORD_RECOVERY") {
-          setShowAuthModal('updatePassword');
-          // Очищаем хэш из URL, чтобы ссылка не использовалась повторно
-          if (window.history.replaceState) {
-            const cleanURL = window.location.href.split('#')[0];
-            window.history.replaceState(null, null, cleanURL);
-          } else {
-            window.location.hash = ''; 
-          }
-        }
       }
     );
-
     return () => {
       authListener?.subscription?.unsubscribe();
     };
@@ -69,39 +52,43 @@ function App() {
     }
   };
 
-  const handleLogin = async (credentials) => {
-    await handleAuthOperation(() => supabase.auth.signInWithPassword(credentials));
-  };
-
-  const handleSignup = async (credentials) => {
-    const { email, password, fullName, phone } = credentials;
-    await handleAuthOperation(() => supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, phone: phone } },
-    }), 'signup');
-  };
-
-  const handleAuthOperation = async (authFunction, operationType = 'login') => {
+  const handleLogin = async ({ email, password }) => {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const { data, error } = await authFunction();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      setShowAuthModal(false);
+      toast.success('С возвращением!'); // <<< ЗАМЕНА alert()
+    } catch (error) {
+      setAuthError(error.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignup = async ({ email, password, fullName, phone }) => {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const { data: signUpResponse, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, phone: phone } },
+      });
       if (error) throw error;
       
-      if (operationType === 'signup' && data.user && !data.session) {
-        alert('Регистрация почти завершена! Проверьте почту для подтверждения email.');
+      if (signUpResponse.user && !signUpResponse.session) {
+         toast.success('Регистрация почти завершена! Проверьте почту для подтверждения.'); // <<< ЗАМЕНА alert()
+      } else {
+         toast.success('Регистрация успешна!'); // <<< ЗАМЕНА alert()
       }
-      // При успешном входе или регистрации с авто-подтверждением, onAuthStateChange обновит сессию, 
-      // и модальное окно закроется.
       setShowAuthModal(false);
     } catch (error) {
       if (error.message.includes("User already registered")) {
         setAuthError('Пользователь с таким email уже зарегистрирован.');
-      } else if (error.message.includes("Invalid login credentials")) {
-        setAuthError('Неверный email или пароль.');
       } else {
-        setAuthError(error.message);
+        setAuthError(error.message || 'Произошла ошибка регистрации.');
       }
     } finally {
       setAuthLoading(false);
@@ -111,6 +98,7 @@ function App() {
   const handleLogout = async () => {
     setAuthLoading(true);
     await supabase.auth.signOut();
+    toast.success('Вы успешно вышли из системы.'); // <<< УВЕДОМЛЕНИЕ О ВЫХОДЕ
     setAuthLoading(false);
   };
   
@@ -130,6 +118,36 @@ function App() {
 
   return (
     <>
+      {/* <<< КОНТЕЙНЕР ДЛЯ УВЕДОМЛЕНИЙ >>> */}
+      <Toaster 
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: '',
+          duration: 4000,
+          style: {
+            background: '#ffffff',
+            color: '#424242',
+            fontFamily: "'Open Sans', sans-serif",
+            fontWeight: 500,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            borderRadius: '8px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#FAD2E1',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+                primary: '#D32F2F',
+                secondary: '#fff'
+            }
+          }
+        }}
+      />
+
       <header className="app-header">
         <Navbar 
           session={session} 
@@ -157,7 +175,6 @@ function App() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <AuthPage
-                  initialMode={showAuthModal}
                   onLogin={handleLogin}
                   onSignup={handleSignup}
                   error={authError}

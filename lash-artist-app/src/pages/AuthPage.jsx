@@ -4,6 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiSend, FiKey } from 'react-icons/fi';
 import { supabase } from '../supabaseClient';
+import { toast } from 'react-hot-toast';
 
 // --- Styled Components (без изменений) ---
 const AuthFormContainer = styled(motion.div)`
@@ -225,7 +226,7 @@ function AuthPage({ initialMode, onLogin, onSignup, error: externalError, loadin
     setLocalMessage({ text: '', type: 'info' });
     setAuthError('');
     if (!email) {
-      setLocalMessage({ text: 'Пожалуйста, введите ваш email', type: 'error' });
+      toast.error('Пожалуйста, введите ваш email'); // <<< ЗАМЕНА setMessage
       return;
     }
     setLoading(true);
@@ -235,9 +236,9 @@ function AuthPage({ initialMode, onLogin, onSignup, error: externalError, loadin
     setLoading(false);
 
     if (resetError) {
-      setLocalMessage({ text: resetError.message, type: 'error' });
+      toast.error('Ошибка: ' + resetError.message); // <<< ЗАМЕНА setMessage
     } else {
-      setLocalMessage({ text: 'Ссылка для сброса пароля отправлена на ваш email.', type: 'success' });
+      toast.success('Ссылка для сброса пароля отправлена на ваш email.'); // <<< ЗАМЕНА setMessage
     }
   };
 
@@ -246,11 +247,11 @@ function AuthPage({ initialMode, onLogin, onSignup, error: externalError, loadin
     setLocalMessage({ text: '', type: 'info' });
     setAuthError('');
     if (password.length < 6) {
-      setLocalMessage({ text: 'Пароль должен быть не менее 6 символов.', type: 'error' });
+      toast.error('Пароль должен быть не менее 6 символов.'); // <<< ЗАМЕНА setMessage
       return;
     }
     if (password !== confirmPassword) {
-      setLocalMessage({ text: 'Пароли не совпадают.', type: 'error' });
+      toast.error('Пароли не совпадают.'); // <<< ЗАМЕНА setMessage
       return;
     }
     setLoading(true);
@@ -258,13 +259,13 @@ function AuthPage({ initialMode, onLogin, onSignup, error: externalError, loadin
     setLoading(false);
 
     if (updateError) {
-      setLocalMessage({ text: 'Ошибка обновления пароля: ' + updateError.message, type: 'error' });
+      toast.error('Ошибка обновления пароля: ' + updateError.message); // <<< ЗАМЕНА setMessage
     } else {
-      setLocalMessage({ text: 'Пароль успешно обновлен! Теперь вы можете войти.', type: 'success' });
-      setAuthMode('login'); // Переключаем на форму входа после успеха
+      toast.success('Пароль успешно обновлен! Теперь вы можете войти.'); // <<< ЗАМЕНА setMessage
+      setAuthMode('login'); 
     }
   };
-
+  
   let title = 'Вход';
   if (authMode === 'signup') title = 'Регистрация';
   if (authMode === 'resetPassword') title = 'Сброс пароля';
