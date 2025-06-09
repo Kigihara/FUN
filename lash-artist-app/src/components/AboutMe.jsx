@@ -6,7 +6,7 @@ import './AboutMe.css';
 // Обычно это требует изменения URL. Если будут проблемы с отображением, нам нужно будет получить прямую ссылку.
 // Пока что, если возникнут проблемы, браузер может блокировать из-за CORS или неправильного формата ссылки.
 // Идеально - загрузить фото на хостинг или в Supabase Storage и использовать прямую ссылку оттуда.
-const masterImageUrl = 'https://vndlykutumwmgojgtnxj.supabase.co/storage/v1/object/public/avatar-artist//vTlRvezgNDg.jpg';
+const masterImageUrl = 'https://movrrmigoqmmwezjabiz.supabase.co/storage/v1/object/public/photo//vTlRvezgNDg%20(1).jpg';
 
 // Иконки для преимуществ (можно подобрать из Feather Icons или аналогичных)
 const CheckCircleIcon = () => (

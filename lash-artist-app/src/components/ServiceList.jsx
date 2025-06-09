@@ -1,10 +1,10 @@
+// src/components/ServiceList.jsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import BookingCalendar from './BookingCalendar';
 import './ServiceList.css';
 import './BookingModal.css'; 
 
-// Иконка часов (outline)
 const ClockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="details-icon">
     <circle cx="12" cy="12" r="10"></circle>
@@ -12,7 +12,6 @@ const ClockIcon = () => (
   </svg>
 );
 
-// Компонент для анимированного текста загрузки
 const AnimatedLoadingText = ({ text }) => {
   return (
     <div className="animated-loading-text">
@@ -29,27 +28,26 @@ const AnimatedLoadingText = ({ text }) => {
   );
 };
 
-// Принимаем userProfile и session как пропсы
-function ServiceList({ userProfile, session }) {
+function ServiceList({ userProfile, session }) { 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
-
+  
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
-  
   const [finalSelectedDate, setFinalSelectedDate] = useState(null);
   const [finalSelectedTime, setFinalSelectedTime] = useState(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    async function fetchServices() {
-      setLoading(true);
-      setError(null);
+    console.log('[ServiceList useEffect] Fetching services...');
+    setLoading(true);
+    setError(null);
+
+    const fetchServices = async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('services')
@@ -57,62 +55,41 @@ function ServiceList({ userProfile, session }) {
           .order('price', { ascending: true });
 
         if (fetchError) throw fetchError;
-        setServices(data);
+        
+        setServices(data || []);
       } catch (err) {
         console.error('Ошибка при загрузке услуг:', err.message);
-        setError(err.message);
+        setError('Не удалось загрузить список услуг.');
       } finally {
         setLoading(false);
       }
-    }
+    };
+    
     fetchServices();
-  }, []);
-  
-  // Обновляем поля, если userProfile изменился (например, после входа/выхода)
-  // или если открывается модальное окно
-  useEffect(() => {
-    if (showBookingModal) { // Логика предзаполнения только когда модалка открыта
-        if (session && userProfile) {
-            setClientName(userProfile.full_name || '');
-            setClientPhone(userProfile.phone || '');
-        } else {
-            // Для гостя или если профиль неполный, поля будут пустыми (сброс в handleBookServiceClick)
-        }
-    }
-  }, [userProfile, session, showBookingModal]);
+  }, []); // Пустой массив зависимостей - загружаем один раз при монтировании
 
+  useEffect(() => {
+    if (showBookingModal) {
+      if (session && userProfile) {
+        setClientName(userProfile.full_name || '');
+        setClientPhone(userProfile.phone || '');
+      } else {
+        setClientName('');
+        setClientPhone('');
+      }
+    }
+  }, [showBookingModal, session, userProfile]);
 
   const handleBookServiceClick = (service) => {
     setSelectedServiceForBooking(service);
-    
-    // Сначала предзаполняем или сбрасываем поля
-    if (session && userProfile) {
-      setClientName(userProfile.full_name || '');
-      setClientPhone(userProfile.phone || '');
-    } else {
-      setClientName('');
-      setClientPhone('');
-    }
-
+    setShowBookingModal(true);
     setFinalSelectedDate(null);
     setFinalSelectedTime(null);
     setIsSubmitting(false); 
-    setShowBookingModal(true); // Показываем модалку ПОСЛЕ установки начальных состояний
-    
-    // Скролл к модалке
-    // Оборачиваем в setTimeout, чтобы DOM успел обновиться с showBookingModal=true
-    setTimeout(() => {
-        const bookingSection = document.getElementById('booking-modal-section');
-        if (bookingSection) {
-            bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }, 0);
   };
 
   const handleCloseBookingModal = () => {
-    if (isSubmitting) return; 
+    if (isSubmitting) return;
     setShowBookingModal(false);
     setSelectedServiceForBooking(null);
   };
@@ -163,11 +140,8 @@ function ServiceList({ userProfile, session }) {
       status: 'pending', 
     };
     
-    // Если пользователь авторизован, добавляем его ID
     if (session && session.user) {
-      // Убедись, что в таблице `bookings` есть столбец user_id UUID NULLABLE REFERENCES auth.users(id)
-      // Если его нет, этот INSERT вызовет ошибку, или нужно убрать это поле из bookingData
-      // bookingData.user_id = session.user.id; 
+      bookingData.user_id = session.user.id; 
     }
     
     console.log("Отправка данных бронирования в Supabase:", bookingData);
@@ -194,7 +168,7 @@ function ServiceList({ userProfile, session }) {
     }
   };
 
-  if (loading && !showBookingModal) {
+  if (loading) {
     return (
       <div className="loading-container">
         <AnimatedLoadingText text="Загрузка услуг..." />
@@ -202,12 +176,8 @@ function ServiceList({ userProfile, session }) {
     );
   }
 
-  if (error && !showBookingModal) { 
-    return <p className="error-message">Ошибка загрузки услуг: {error}</p>;
-  }
-
-  if (services.length === 0 && !loading && !error && !showBookingModal) {
-    return <p className="info-message">Пока нет доступных услуг.</p>;
+  if (error) {
+    return <p className="error-message">Ошибка: {error}</p>;
   }
 
   return (
@@ -219,36 +189,40 @@ function ServiceList({ userProfile, session }) {
       >
         <h2 className="section-title">Наши Услуги</h2>
         <div className="service-list-grid">
-          {services.map((service, index) => (
-            <div key={service.id} className="service-card" style={{ animationDelay: `${index * 0.1}s` }}>
-              {service.image_url && (
-                <div className="service-card-image-wrapper">
-                  <img src={service.image_url} alt={service.name} className="service-card-image" />
-                </div>
-              )}
-              <div className="service-card-content">
-                <h3 className="service-card-title">{service.name}</h3>
-                <p className="service-card-description">{service.description || 'Описание отсутствует'}</p>
-                <div className="service-card-meta">
-                  <div className="service-detail-item price-item">
-                    <span className="price-value">{service.price}</span>
-                    <span className="price-currency"> ₽</span>
+          {(services.length > 0) ? (
+            services.map((service, index) => (
+              <div key={service.id} className="service-card" style={{ animationDelay: `${index * 0.1}s` }}>
+                {service.image_url && (
+                  <div className="service-card-image-wrapper">
+                    <img src={service.image_url} alt={service.name} className="service-card-image" />
                   </div>
-                  <div className="service-detail-item duration-item">
-                    <ClockIcon />
-                    <span>{service.duration_minutes} мин.</span>
+                )}
+                <div className="service-card-content">
+                  <h3 className="service-card-title">{service.name}</h3>
+                  <p className="service-card-description">{service.description || 'Описание отсутствует'}</p>
+                  <div className="service-card-meta">
+                    <div className="service-detail-item price-item">
+                      <span className="price-value">{service.price}</span>
+                      <span className="price-currency"> ₽</span>
+                    </div>
+                    <div className="service-detail-item duration-item">
+                      <ClockIcon />
+                      <span>{service.duration_minutes} мин.</span>
+                    </div>
                   </div>
+                  <button 
+                    className="service-card-button-cta" 
+                    onClick={() => handleBookServiceClick(service)}
+                    disabled={showBookingModal} 
+                  >
+                    Записаться
+                  </button>
                 </div>
-                <button 
-                  className="service-card-button-cta" 
-                  onClick={() => handleBookServiceClick(service)}
-                  disabled={showBookingModal || loading} 
-                >
-                  Записаться
-                </button>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="info-message">Услуги еще не добавлены.</p>
+          )}
         </div>
       </section>
 
