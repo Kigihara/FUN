@@ -1,12 +1,16 @@
 // src/App.jsx
+
+
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from './supabaseClient';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ServiceList from './components/ServiceList';
 import AboutMe from './components/AboutMe';
 import Contact from './components/Contact';
-import AuthForm from './components/AuthForm';
+import AuthPage from './pages/AuthPage';
 import { Icon24LogoVk } from '@vkontakte/icons';
 import './App.css';
 
@@ -16,115 +20,90 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  // Убрали все состояния, связанные с загрузкой приложения (appLoading, initialLoading, etc.)
 
-  console.log('[App] Render. Session:', !!session, 'Profile:', !!userProfile);
-
-  // Единственный useEffect для управления сессией.
   useEffect(() => {
-    // 1. Устанавливаем слушатель onAuthStateChange.
-    // Он будет срабатывать при входе, выходе, обновлении токена,
-    // и САМОЕ ВАЖНОЕ - он сработает один раз при загрузке с событием INITIAL_SESSION,
-    // которое несет текущую сессию из localStorage.
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        console.log(`[App onAuthStateChange] Event: ${_event}, Session:`, currentSession);
-        setSession(currentSession);
+      (_event, session) => {
+        // Очищаем хэш от токенов после входа или обновления пароля
+        if (_event === "SIGNED_IN" || _event === "PASSWORD_RECOVERY") {
+          const hash = window.location.hash;
+          if (hash.includes('access_token')) {
+            if (window.history.replaceState) {
+              const cleanURL = window.location.href.split('#')[0];
+              window.history.replaceState(null, null, cleanURL);
+            } else {
+              window.location.hash = ''; 
+            }
+          }
+        }
+        setSession(session);
       }
     );
 
-    // 2. Функция очистки для отписки от слушателя при размонтировании компонента.
     return () => {
-      console.log('[App useEffect Cleanup] Cleaning up listener.');
       authListener?.subscription?.unsubscribe();
     };
-  }, []); // Пустой массив зависимостей гарантирует, что этот эффект запустится один раз.
+  }, []);
 
-  // Второй useEffect, который реагирует на ИЗМЕНЕНИЕ сессии.
   useEffect(() => {
-    console.log('[App Session useEffect] Session state changed:', session);
     if (session?.user) {
-      // Если сессия есть и в ней есть пользователь, загружаем профиль.
-      // Проверяем, чтобы не запрашивать профиль снова, если он уже есть для этого пользователя.
       if (!userProfile || userProfile.id !== session.user.id) {
         fetchUserProfile(session.user.id);
       }
     } else {
-      // Если сессии нет (например, после выхода), очищаем профиль.
       setUserProfile(null);
     }
-  }, [session]); // Этот эффект зависит только от `session`.
+  }, [session, userProfile]);
 
   const fetchUserProfile = async (userId) => {
     if (!userId) return;
-    console.log(`[fetchUserProfile] Attempting to fetch profile for userId: ${userId}`);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`*`)
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('profiles').select(`*`).eq('id', userId).single();
       if (error && error.code !== 'PGRST116') throw error;
-      console.log(`[fetchUserProfile] Profile data found for ${userId}:`, data);
       setUserProfile(data || null);
     } catch (error) {
-      console.error('Ошибка при загрузке профиля пользователя:', error);
+      console.error('Ошибка при загрузке профиля:', error);
       setUserProfile(null);
     }
   };
 
-  const handleLogin = async ({ email, password }) => {
+  const handleAuthOperation = async (authFunction, successMessage) => {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await authFunction();
       if (error) throw error;
       setShowAuthModal(false);
-    } catch (error) {
-      setAuthError(error.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleSignup = async ({ email, password, fullName, phone }) => {
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const { data: signUpResponse, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName, phone: phone } },
-      });
-      if (error) throw error;
-      
-      if (signUpResponse.user && !signUpResponse.session) {
-         alert('Регистрация почти завершена! Пожалуйста, проверьте вашу почту для подтверждения email.');
-      } else {
-         alert('Регистрация успешна!');
-      }
-      setShowAuthModal(false);
+      if (successMessage) alert(successMessage);
     } catch (error) {
       if (error.message.includes("User already registered")) {
         setAuthError('Пользователь с таким email уже зарегистрирован.');
+      } else if (error.message.includes("Invalid login credentials")) {
+        setAuthError('Неверный email или пароль.');
       } else {
-        setAuthError(error.message || 'Произошла ошибка регистрации.');
+        setAuthError(error.message);
       }
     } finally {
       setAuthLoading(false);
     }
   };
 
+  const handleLogin = (credentials) => handleAuthOperation(() => supabase.auth.signInWithPassword(credentials));
+
+  const handleSignup = (credentials) => {
+    const { email, password, fullName, phone } = credentials;
+    const authFunction = () => supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName, phone: phone } },
+    });
+    // Сообщение об успехе обрабатывается в AuthPage, так как оно разное
+    handleAuthOperation(authFunction, null); 
+  };
+
   const handleLogout = async () => {
-    console.log("[handleLogout] Attempting to sign out...");
     setAuthLoading(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Ошибка выхода:", error.message);
-      alert("Ошибка выхода: " + error.message);
-    } else {
-      console.log("[handleLogout] Sign out successful.");
-    }
+    await supabase.auth.signOut();
     setAuthLoading(false);
   };
   
@@ -154,37 +133,35 @@ function App() {
         />
       </header>
 
-      {showAuthModal && (
-        <div className="auth-modal-overlay" onClick={() => !authLoading && setShowAuthModal(false)}>
-          <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button 
-                className="auth-modal-close-button" 
-                onClick={() => !authLoading && setShowAuthModal(false)}
-                disabled={authLoading}
-                aria-label="Закрыть окно аутентификации"
-            >×</button>
-            {showAuthModal === 'login' && (
-              <AuthForm
-                title="Вход"
-                buttonText="Войти"
-                onSubmit={handleLogin}
-                error={authError}
-                loading={authLoading}
+      <AnimatePresence>
+        {showAuthModal && (
+          <motion.div 
+            className="auth-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !authLoading && setShowAuthModal(false)}
+          >
+            <motion.div 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.95, opacity: 0, y: -30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <AuthPage
+                  initialMode={showAuthModal}
+                  onLogin={handleLogin}
+                  onSignup={handleSignup}
+                  error={authError}
+                  loading={authLoading}
+                  setAuthError={setAuthError}
+                  setLoading={setAuthLoading}
               />
-            )}
-            {showAuthModal === 'signup' && (
-              <AuthForm
-                title="Регистрация"
-                buttonText="Зарегистрироваться"
-                onSubmit={handleSignup}
-                isSignUp={true}
-                error={authError}
-                loading={authLoading}
-              />
-            )}
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <Hero />
       <main className="app-main">
