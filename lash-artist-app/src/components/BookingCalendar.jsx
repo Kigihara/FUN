@@ -1,157 +1,88 @@
 // src/components/BookingCalendar.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react'; // <<< ИСПРАВЛЕНО ЗДЕСЬ: useCallback удален
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import './BookingCalendar.css'; 
+import './BookingCalendar.css';
 import { supabase } from '../supabaseClient';
+import { toast } from 'react-hot-toast';
 
-// Вспомогательные функции для времени
-const timeToMinutes = (timeStr) => {
-  if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
-    // console.warn('[timeToMinutes] Invalid time string provided:', timeStr);
-    return 0; 
-  }
-  const parts = timeStr.split(':');
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  if (isNaN(hours) || isNaN(minutes)) {
-    // console.warn('[timeToMinutes] Could not parse hours or minutes from:', timeStr);
-    return 0;
-  }
-  return hours * 60 + minutes;
-};
-
-const minutesToTime = (totalMinutes) => {
-  if (typeof totalMinutes !== 'number' || isNaN(totalMinutes)) {
-    // console.warn('[minutesToTime] Invalid totalMinutes provided:', totalMinutes);
-    return '00:00'; 
-  }
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
-
-function BookingCalendar({ selectedService, onDateTimeConfirm }) { 
-  console.log('[BookingCalendar] Render. Selected Service:', selectedService?.name);
-
+function BookingCalendar({ selectedService, onDateTimeConfirm }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [masterAvailability, setMasterAvailability] = useState({}); 
+  const [masterAvailability, setMasterAvailability] = useState([]); 
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [calendarError, setCalendarError] = useState(null);
-  
   const [selectedDate, setSelectedDate] = useState(null);
-  const [generatedTimeSlots, setGeneratedTimeSlots] = useState([]); 
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null); 
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
 
   useEffect(() => {
-    console.log('[BookingCalendar masterAvailability useEffect] Running. SelectedService ID:', selectedService?.id);
-    if (selectedService && selectedService.id) {
-      const fetchMasterAvailability = async () => {
-        console.log('[BookingCalendar fetchMasterAvailability] Setting calendarLoading to true.');
-        setCalendarLoading(true);
-        setCalendarError(null);
-        setMasterAvailability({}); 
-        try {
-          console.log('[BookingCalendar fetchMasterAvailability] Attempting to fetch "availability".');
-          const { data, error: fetchError } = await supabase
-            .from('availability') 
-            .select('date, start_time, end_time, is_booked')
-            .eq('is_booked', false); 
+    const fetchMasterAvailability = async () => {
+      setCalendarLoading(true);
+      setCalendarError(null);
+      setMasterAvailability([]);
 
-          console.log('[BookingCalendar fetchMasterAvailability] Supabase response. Error:', fetchError, 'Data:', data);
-          if (fetchError) throw fetchError;
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('availability')
+          .select('id, date, start_time, end_time')
+          .eq('is_booked', false);
 
-          const availabilityByDate = (data || []).reduce((acc, slot) => {
-            const dateStr = slot.date;
-            if (!acc[dateStr]) acc[dateStr] = [];
-            if (typeof slot.start_time === 'string' && typeof slot.end_time === 'string') {
-                acc[dateStr].push({ start: slot.start_time, end: slot.end_time });
-            } else {
-                console.warn(`[BookingCalendar] Invalid time format for slot on ${dateStr}:`, slot);
-            }
-            if (acc[dateStr].length > 1) {
-                acc[dateStr].sort((a, b) => a.start.localeCompare(b.start));
-            }
-            return acc;
-          }, {});
-          
-          console.log('[BookingCalendar fetchMasterAvailability] Processed availabilityByDate:', availabilityByDate);
-          setMasterAvailability(availabilityByDate);
-        } catch (err) {
-          console.error('[BookingCalendar fetchMasterAvailability] Fetching error:', err.message, err);
-          setCalendarError('Не удалось загрузить расписание.');
-        } finally {
-          console.log('[BookingCalendar fetchMasterAvailability] Setting calendarLoading to false.');
-          setCalendarLoading(false);
-        }
-      };
-      fetchMasterAvailability();
-    } else {
-      setMasterAvailability({});
-      setGeneratedTimeSlots([]);
-      setCalendarLoading(false); 
-      console.log('[BookingCalendar masterAvailability useEffect] No selected service, clearing data.');
-    }
-  }, [selectedService]); // Зависимость от selectedService
+        if (fetchError) throw fetchError;
+        
+        const sortedData = (data || []).sort((a,b) => new Date(a.date) - new Date(b.date) || a.start_time.localeCompare(b.start_time));
+        setMasterAvailability(sortedData);
 
-  const generateSlotsForDate = useCallback((dateToGenerate, serviceDurationMinutes) => {
-    // ... (код generateSlotsForDate как был, без изменений) ...
-    if (!dateToGenerate || !serviceDurationMinutes || Object.keys(masterAvailability).length === 0) {
-      console.log('[BookingCalendar generateSlotsForDate] Conditions not met. Clearing slots.');
-      setGeneratedTimeSlots([]);
-      return;
-    }
-    const dateString = dateToGenerate.toISOString().split('T')[0];
-    console.log(`[BookingCalendar generateSlotsForDate] Generating for date: ${dateString}, duration: ${serviceDurationMinutes} min.`);
-
-    const dayAvailabilityIntervals = masterAvailability[dateString] || [];
-    console.log(`[BookingCalendar generateSlotsForDate] Master intervals for ${dateString}:`, dayAvailabilityIntervals);
-    const slots = [];
-
-    for (const interval of dayAvailabilityIntervals) {
-      let currentPotentialSlotStart = timeToMinutes(interval.start);
-      const intervalEnd = timeToMinutes(interval.end);
-
-      while (currentPotentialSlotStart + serviceDurationMinutes <= intervalEnd) {
-        const slotStartTimeStr = minutesToTime(currentPotentialSlotStart);
-        slots.push(slotStartTimeStr);
-        currentPotentialSlotStart += 30; 
+      } catch (err) {
+        console.error('[BookingCalendar] Fetching error:', err.message, err);
+        setCalendarError('Не удалось загрузить расписание.');
+        toast.error('Не удалось загрузить расписание.');
+      } finally {
+        setCalendarLoading(false);
       }
-    }
-    const uniqueSlots = slots.filter((slot, index, self) => self.indexOf(slot) === index);
-    console.log(`[BookingCalendar generateSlotsForDate] Generated unique slots for ${dateString}:`, uniqueSlots);
-    setGeneratedTimeSlots(uniqueSlots);
-  }, [masterAvailability]); 
+    };
+    
+    fetchMasterAvailability();
+  }, []);
 
   useEffect(() => {
-    console.log('[BookingCalendar generateSlots useEffect] selectedDate or selectedService changed.');
-    if (selectedDate && selectedService?.duration_minutes) {
-      console.log('[BookingCalendar generateSlots useEffect] Valid data, calling generateSlotsForDate.');
-      generateSlotsForDate(selectedDate, selectedService.duration_minutes);
-      setSelectedTimeSlot(null); 
-      if (onDateTimeConfirm) { 
-         onDateTimeConfirm(selectedDate, null); 
-      }
+    setSelectedTimeSlot(null);
+    onDateTimeConfirm(selectedDate, null);
+
+    if (selectedDate && selectedService) {
+      const dateString = selectedDate.toISOString().split('T')[0];
+      
+      const slotsForDay = masterAvailability.filter(slot => {
+        if (slot.date !== dateString) return false;
+        
+        const serviceDuration = selectedService.duration_minutes;
+        const [startH, startM] = slot.start_time.split(':').map(Number);
+        const [endH, endM] = slot.end_time.split(':').map(Number);
+        const slotDuration = (endH * 60 + endM) - (startH * 60 + startM);
+        
+        return serviceDuration <= slotDuration;
+      });
+      
+      const timeOptions = slotsForDay.map(slot => slot.start_time.slice(0, 5));
+      setAvailableTimeSlots(timeOptions);
+
     } else {
-      console.log('[BookingCalendar generateSlots useEffect] Invalid data, clearing generated slots.');
-      setGeneratedTimeSlots([]);
-      if (onDateTimeConfirm) {
-         onDateTimeConfirm(null, null); 
-      }
+      setAvailableTimeSlots([]);
     }
-  }, [selectedDate, selectedService, generateSlotsForDate, onDateTimeConfirm]);
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedService, masterAvailability]);
+
 
   const handleDateChange = (date) => {
-    console.log('[BookingCalendar handleDateChange] New date selected:', date.toISOString().split('T')[0]);
-    setCurrentDate(date); 
-    setSelectedDate(date); 
+    setCurrentDate(date);
+    setSelectedDate(date);
   };
   
   const tileClassName = ({ date, view }) => {
-    if (view === 'month' && Object.keys(masterAvailability).length > 0) {
+    if (view === 'month') {
       const dateString = date.toISOString().split('T')[0];
-      if (masterAvailability[dateString] && masterAvailability[dateString].length > 0) {
-        return 'available-day-master'; 
+      if (masterAvailability.some(slot => slot.date === dateString)) {
+        return 'available-day'; 
       }
     }
     return null;
@@ -160,8 +91,8 @@ function BookingCalendar({ selectedService, onDateTimeConfirm }) {
   const tileDisabled = ({ date, view }) => {
     if (view === 'month') {
       const today = new Date();
-      today.setHours(0, 0, 0, 0); 
-      if (date < today) { 
+      today.setHours(0, 0, 0, 0);
+      if (date < today) {
         return true;
       }
     }
@@ -169,12 +100,15 @@ function BookingCalendar({ selectedService, onDateTimeConfirm }) {
   };
 
   const handleTimeSlotClick = (time) => {
-    console.log('[BookingCalendar handleTimeSlotClick] Time slot selected:', time);
     setSelectedTimeSlot(time);
     if (onDateTimeConfirm && selectedDate) {
-      onDateTimeConfirm(selectedDate, time); 
+      onDateTimeConfirm(selectedDate, time);
     }
   };
+  
+  if (tileClassName && tileClassName.toString().includes('available-day-master')) {
+    console.error("Найден старый класс 'available-day-master'. Пожалуйста, используйте 'available-day' в BookingCalendar.css");
+  }
 
   if (calendarLoading) {
     return <div className="calendar-loading">Загрузка расписания...</div>;
@@ -183,17 +117,17 @@ function BookingCalendar({ selectedService, onDateTimeConfirm }) {
   if (calendarError) {
     return <p className="calendar-error">{calendarError}</p>;
   }
-
+  
   return (
     <div className="booking-calendar-container">
       <div className="calendar-wrapper">
         <Calendar
           onChange={handleDateChange}
           value={currentDate}
-          minDate={new Date()} 
+          minDate={new Date()}
           tileClassName={tileClassName}
           tileDisabled={tileDisabled}
-          prev2Label={null} 
+          prev2Label={null}
           next2Label={null}
         />
       </div>
@@ -201,22 +135,22 @@ function BookingCalendar({ selectedService, onDateTimeConfirm }) {
       {selectedDate && selectedService && (
         <div className="time-slots-wrapper">
           <h3>
-            Доступное время на {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} для "{selectedService.name}"
+            Доступное время на {selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
           </h3>
-          {generatedTimeSlots.length > 0 ? (
+          {availableTimeSlots.length > 0 ? (
             <div className="time-slots-grid">
-              {generatedTimeSlots.map((time, index) => (
+              {availableTimeSlots.map((time, index) => (
                 <button 
                   key={index} 
                   className={`time-slot-button ${selectedTimeSlot === time ? 'selected' : ''}`}
                   onClick={() => handleTimeSlotClick(time)}
                 >
-                  {time} 
+                  {time}
                 </button>
               ))}
             </div>
           ) : (
-            <p>На выбранную дату нет доступного времени для данной услуги.</p>
+            <p>{`На выбранную дату нет доступного времени для услуги "${selectedService.name}".`}</p>
           )}
         </div>
       )}

@@ -1,33 +1,64 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import pluginReactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
-  { ignores: ['dist'] },
   {
+    // Глобально игнорируем папки
+    ignores: ['dist/'],
+  },
+  {
+    // Настройки для всех JS/JSX файлов
     files: ['**/*.{js,jsx}'],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      // Указываем, что это файлы ECMAScript Modules
+      sourceType: 'module',
+      // Определяем глобальные переменные, доступные в коде
+      globals: {
+        ...globals.browser, // `window`, `document`, etc.
+      },
+      // Указываем парсеру, что мы используем JSX
       parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
+    // Регистрируем плагины
     plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
+      react: pluginReact,
+      'react-hooks': pluginReactHooks,
+      'react-refresh': pluginReactRefresh,
     },
+    // Настройки для плагинов
+    settings: {
+      react: {
+        version: 'detect', // Автоматически определять версию React
+      },
+    },
+    // Правила линтинга
     rules: {
-      ...js.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Базовые правила от ESLint
+      ...pluginJs.configs.recommended.rules,
+      // Рекомендованные правила для React
+      ...pluginReact.configs.recommended.rules,
+      // Рекомендованные правила для хуков React
+      ...pluginReactHooks.configs.recommended.rules,
+
+      // --- Наши кастомные переопределения ---
+
+      // Отключаем, так как в Vite/CRA не нужно импортить React в каждый файл
+      'react/react-in-jsx-scope': 'off',
+      // Отключаем, так как мы не используем PropTypes
+      'react/prop-types': 'off',
+      
+      // Предупреждение для `react-refresh`
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
     },
   },
-]
+];

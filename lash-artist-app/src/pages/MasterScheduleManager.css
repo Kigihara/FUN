@@ -1,0 +1,276 @@
+/* src/pages/MasterScheduleManager.css */
+.master-schedule-container {
+    padding: 2rem 1.5rem;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+    overflow: hidden; /* Важно для анимаций */
+}
+
+.master-schedule-title {
+    font-family: 'Montserrat', sans-serif;
+    text-align: center;
+    font-size: 2.25rem;
+    color: #212121;
+    margin-bottom: 0.5rem;
+}
+
+.master-schedule-subtitle {
+    text-align: center;
+    color: #5E5C5B;
+    max-width: 600px;
+    margin: 0 auto 2.5rem auto;
+}
+
+.schedule-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+/* Стили для календаря и панели слотов */
+.calendar-panel {
+    background-color: #fdfdfd;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #f0efeb;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.react-calendar__tile.has-availability {
+    position: relative;
+}
+.react-calendar__tile.has-availability::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #FAD2E1;
+}
+.react-calendar__tile--active.has-availability::after {
+    background-color: #FFFFFF;
+}
+
+.slots-panel {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.slots-panel-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #333;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #F0EFEB;
+    margin-bottom: 1.5rem;
+}
+
+.slots-list-section, .add-slot-section {
+    background-color: #fdfdfd;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #f0efeb;
+}
+
+.slots-list {
+    list-style: none;
+    padding: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    /* Стилизация скроллбара (опционально) */
+    scrollbar-width: thin;
+    scrollbar-color: #D4CFC7 #fdfdfd;
+}
+.slots-list::-webkit-scrollbar {
+  width: 8px;
+}
+.slots-list::-webkit-scrollbar-track {
+  background: #fdfdfd;
+}
+.slots-list::-webkit-scrollbar-thumb {
+  background-color: #D4CFC7;
+  border-radius: 10px;
+  border: 2px solid #fdfdfd;
+}
+
+
+.slot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.slot-item:hover {
+    background-color: #F0EFEB;
+    transform: scale(1.02);
+}
+
+.slot-item.booked {
+    background-color: #f5f5f5;
+    border-color: #e0e0e0;
+    color: #9e9e9e;
+    transform: none; /* Убираем эффект ховера для забронированных */
+}
+
+.slot-time {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.slot-status-booked {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: #757575;
+}
+
+.delete-slot-btn {
+    background: transparent;
+    border: none;
+    color: #BDBDBD;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.delete-slot-btn:hover {
+    color: #D32F2F;
+    background-color: rgba(211, 47, 47, 0.1);
+}
+.delete-slot-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-slots-message {
+    color: #757575;
+    padding: 1rem 0;
+    text-align: center;
+    font-style: italic;
+}
+
+/* <<< СТИЛИ ДЛЯ СКЕЛЕТОНА >>> */
+.slot-item.skeleton {
+    background-color: #f5f5f5;
+    border-color: #eee;
+    pointer-events: none;
+}
+@keyframes skeleton-loading {
+    0% { background-color: #f5f5f5; }
+    50% { background-color: #e0e0e0; }
+    100% { background-color: #f5f5f5; }
+}
+.skeleton-text, .skeleton-icon {
+    height: 20px;
+    border-radius: 4px;
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+}
+.skeleton-icon {
+    width: 20px;
+}
+
+
+/* Форма добавления слота */
+.add-slot-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.form-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+.add-slot-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex-grow: 1;
+}
+.add-slot-form .form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #424242;
+}
+.add-slot-form .form-group input {
+    padding: 0.75rem;
+    border: 1px solid #D4CFC7;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: 'Open Sans', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.add-slot-form .form-group input:focus {
+    outline: none;
+    border-color: #FAD2E1;
+    box-shadow: 0 0 0 2px rgba(250, 210, 225, 0.3);
+}
+
+.add-slot-btn {
+    background-color: #FAD2E1;
+    color: #424242;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.add-slot-btn:hover:not(:disabled) {
+    background-color: #E2BCC7;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.add-slot-btn:disabled {
+    background-color: #E0E0E0;
+    cursor: not-allowed;
+    color: #9e9e9e;
+}
+
+/* <<< СТИЛИ ДЛЯ ПРЕДУПРЕЖДЕНИЯ О НЕВАЛИДНОМ ВРЕМЕНИ >>> */
+.time-error-notice {
+    font-size: 0.85rem;
+    color: #D32F2F;
+    font-weight: 500;
+    margin-top: -0.5rem;
+}
+
+
+@media (min-width: 992px) {
+    .schedule-content-wrapper {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    .calendar-panel {
+        max-width: 400px;
+        flex-shrink: 0;
+    }
+}

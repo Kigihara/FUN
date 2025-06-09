@@ -130,19 +130,20 @@
   
   /* Если есть доступные слоты, можно сделать рамку или фон ярче */
   .react-calendar__tile.available-day {
-    /* border: 1px solid #FAD2E1; */ /* Розовая рамка */
-    /* font-weight: bold; */ /* Более жирный шрифт */
+    /* Можно добавить точку или другой индикатор */
     background-color: #fff0f5; /* Очень легкий розовый фон (Lavender Blush) */
+    /* font-weight: bold; */ /* Можно сделать шрифт жирнее */
   }
-  .react-calendar__tile.available-day:enabled:hover,
-  .react-calendar__tile.available-day:enabled:focus {
-    background-color: #ffe4ee; /* Чуть насыщеннее при ховере */
-  }
-  .react-calendar__tile.available-day.react-calendar__tile--active { /* Если доступный день выбран */
-    background-color: #FAD2E1 !important;
-    color: white !important;
-  }
-  
+
+ .react-calendar__tile.available-day:enabled:hover,
+.react-calendar__tile.available-day:enabled:focus {
+  background-color: #ffe4ee; /* Чуть насыщеннее при ховере */
+}
+
+.react-calendar__tile.available-day.react-calendar__tile--active { /* Если доступный день выбран */
+  background-color: #FAD2E1 !important;
+  color: white !important;
+}
   
   .calendar-loading, .calendar-error {
     text-align: center;
