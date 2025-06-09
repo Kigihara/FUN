@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiSend } from 'react-icons/fi';
+import { FiMail, FiLock, FiLogIn, FiUserPlus, FiAlertCircle, FiCheckCircle, FiArrowLeft, FiHelpCircle, FiSend, FiKey } from 'react-icons/fi';
 import { supabase } from '../supabaseClient';
 
+// --- Styled Components (без изменений) ---
 const AuthFormContainer = styled(motion.div)`
   width: 100%;
   max-width: 400px;
@@ -183,24 +184,30 @@ const Message = styled(motion.p)`
   }
 `;
 
-function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError, setLoading }) {
-  const [authMode, setAuthMode] = useState(initialMode);
+// --- Основной компонент AuthPage ---
+function AuthPage({ initialMode, onLogin, onSignup, error: externalError, loading, setAuthError, setLoading }) {
+  const [authMode, setAuthMode] = useState(initialMode); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [localMessage, setLocalMessage] = useState({ text: '', type: 'info' });
 
   useEffect(() => {
+    setAuthMode(initialMode); // Синхронизируем режим с тем, что пришло из App.jsx
+  }, [initialMode]);
+
+  useEffect(() => {
     // Сбрасываем поля и локальное сообщение при смене режима
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
     setFullName('');
     setPhone('');
     setLocalMessage({ text: '', type: 'info' });
-    // Также очищаем ошибку из App.jsx, когда меняем режим
-    if (error) {
-      setAuthError('');
+    if (externalError) {
+      setAuthError(''); // Очищаем ошибку из App.jsx, когда меняем режим
     }
   }, [authMode, setAuthError]);
 
@@ -216,8 +223,9 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     setLocalMessage({ text: '', type: 'info' });
+    setAuthError('');
     if (!email) {
-      setLocalMessage({ text: 'Пожалуйста, введите email', type: 'error' });
+      setLocalMessage({ text: 'Пожалуйста, введите ваш email', type: 'error' });
       return;
     }
     setLoading(true);
@@ -233,28 +241,45 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    setLocalMessage({ text: '', type: 'info' });
+    setAuthError('');
+    if (password.length < 6) {
+      setLocalMessage({ text: 'Пароль должен быть не менее 6 символов.', type: 'error' });
+      return;
+    }
+    if (password !== confirmPassword) {
+      setLocalMessage({ text: 'Пароли не совпадают.', type: 'error' });
+      return;
+    }
+    setLoading(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password: password });
+    setLoading(false);
+
+    if (updateError) {
+      setLocalMessage({ text: 'Ошибка обновления пароля: ' + updateError.message, type: 'error' });
+    } else {
+      setLocalMessage({ text: 'Пароль успешно обновлен! Теперь вы можете войти.', type: 'success' });
+      setAuthMode('login'); // Переключаем на форму входа после успеха
+    }
   };
 
-  let title = authMode === 'login' ? 'Вход в аккаунт' : authMode === 'signup' ? 'Создание аккаунта' : 'Сброс пароля';
-  const displayMessage = error || localMessage.text;
-  const messageType = error ? 'error' : localMessage.type;
+  let title = 'Вход';
+  if (authMode === 'signup') title = 'Регистрация';
+  if (authMode === 'resetPassword') title = 'Сброс пароля';
+  if (authMode === 'updatePassword') title = 'Создайте новый пароль';
+
+  const displayMessage = externalError || localMessage.text;
+  const messageType = externalError ? 'error' : localMessage.type;
 
   return (
     <AuthFormContainer>
-      <motion.h2 variants={itemVariants}>{title}</motion.h2>
+      <motion.h2>{title}</motion.h2>
       
       <AnimatePresence>
         {displayMessage && (
-          <Message
-            className={messageType}
-            key={displayMessage}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-          >
+          <Message className={messageType} key={displayMessage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             {messageType === 'error' ? <FiAlertCircle /> : <FiCheckCircle />}
             {displayMessage}
           </Message>
@@ -262,16 +287,38 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {authMode === 'resetPassword' ? (
+        {authMode === 'updatePassword' ? (
+          <Form key="update" onSubmit={handlePasswordUpdate}>
+            <motion.div>
+              <InputWrapper>
+                <InputIcon><FiLock /></InputIcon>
+                <InputField type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength="6" placeholder=" " disabled={loading} />
+                <InputLabel>Новый пароль</InputLabel>
+              </InputWrapper>
+            </motion.div>
+            <motion.div>
+              <InputWrapper>
+                <InputIcon><FiLock /></InputIcon>
+                <InputField type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength="6" placeholder=" " disabled={loading} />
+                <InputLabel>Подтвердите пароль</InputLabel>
+              </InputWrapper>
+            </motion.div>
+            <motion.div>
+              <SubmitButton type="submit" disabled={loading} whileTap={{ scale: 0.98 }}>
+                  {loading ? <Spinner/> : 'Обновить пароль'}
+              </SubmitButton>
+            </motion.div>
+          </Form>
+        ) : authMode === 'resetPassword' ? (
           <Form key="reset" onSubmit={handlePasswordReset}>
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <InputWrapper>
                 <InputIcon><FiMail /></InputIcon>
                 <InputField type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} />
                 <InputLabel>Email</InputLabel>
               </InputWrapper>
             </motion.div>
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <SubmitButton type="submit" disabled={loading} whileTap={{ scale: 0.98 }}>
                   {loading ? <Spinner/> : 'Отправить ссылку'}
               </SubmitButton>
@@ -282,14 +329,14 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
             <AnimatePresence>
               {authMode === 'signup' && (
                 <>
-                  <motion.div key="fullNameWrapper" variants={itemVariants} initial="hidden" animate="visible" exit="hidden">
+                  <motion.div key="fullNameWrapper" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                     <InputWrapper>
                       <InputIcon><FiUserPlus /></InputIcon>
                       <InputField type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder=" " disabled={loading} />
                       <InputLabel>Ваше имя</InputLabel>
                     </InputWrapper>
                   </motion.div>
-                  <motion.div key="phoneWrapper" variants={itemVariants} initial="hidden" animate="visible" exit="hidden">
+                  <motion.div key="phoneWrapper" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                     <InputWrapper>
                       <InputIcon style={{fontSize: '1rem'}}>📞</InputIcon>
                       <InputField type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder=" " disabled={loading} />
@@ -299,21 +346,21 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
                 </>
               )}
             </AnimatePresence>
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <InputWrapper>
                 <InputIcon><FiMail /></InputIcon>
                 <InputField type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder=" " disabled={loading} />
                 <InputLabel>Email</InputLabel>
               </InputWrapper>
             </motion.div>
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <InputWrapper>
                 <InputIcon><FiLock /></InputIcon>
                 <InputField type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder=" " disabled={loading} minLength="6"/>
                 <InputLabel>Пароль</InputLabel>
               </InputWrapper>
             </motion.div>
-            <motion.div variants={itemVariants}>
+            <motion.div>
               <SubmitButton type="submit" disabled={loading} whileTap={{ scale: 0.98 }}>
                 {loading ? <Spinner /> : (authMode === 'signup' ? 'Зарегистрироваться' : 'Войти')}
               </SubmitButton>
@@ -322,7 +369,7 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
         )}
       </AnimatePresence>
 
-      <LinksContainer variants={itemVariants}>
+      <LinksContainer>
         {authMode === 'login' && (
           <>
             <StyledLink href="#" onClick={(e) => {e.preventDefault(); setAuthMode('signup')}}> <FiUserPlus size={16} /> Создать аккаунт </StyledLink>
@@ -333,6 +380,9 @@ function AuthPage({ initialMode, onLogin, onSignup, error, loading, setAuthError
           <StyledLink href="#" onClick={(e) => {e.preventDefault(); setAuthMode('login')}}> <FiArrowLeft size={16} /> Уже есть аккаунт? Войти </StyledLink>
         )}
         {authMode === 'resetPassword' && (
+          <StyledLink href="#" onClick={(e) => {e.preventDefault(); setAuthMode('login')}}> <FiArrowLeft size={16} /> Вернуться ко входу </StyledLink>
+        )}
+        {authMode === 'updatePassword' && (
           <StyledLink href="#" onClick={(e) => {e.preventDefault(); setAuthMode('login')}}> <FiArrowLeft size={16} /> Вернуться ко входу </StyledLink>
         )}
       </LinksContainer>

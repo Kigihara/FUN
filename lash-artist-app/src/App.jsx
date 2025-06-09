@@ -1,6 +1,7 @@
 // src/App.jsx
+// eslint-disable-next-line no-unused-vars
 
-
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
@@ -17,26 +18,27 @@ import './App.css';
 function App() {
   const [session, setSession] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false); // 'login', 'signup', 'updatePassword'
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        // Очищаем хэш от токенов после входа или обновления пароля
-        if (_event === "SIGNED_IN" || _event === "PASSWORD_RECOVERY") {
-          const hash = window.location.hash;
-          if (hash.includes('access_token')) {
-            if (window.history.replaceState) {
-              const cleanURL = window.location.href.split('#')[0];
-              window.history.replaceState(null, null, cleanURL);
-            } else {
-              window.location.hash = ''; 
-            }
+        console.log(`[App onAuthStateChange] Event: ${_event}, Session:`, session);
+        setSession(session);
+
+        // Если пришло событие PASSWORD_RECOVERY, открываем модальное окно в режиме обновления пароля
+        if (_event === "PASSWORD_RECOVERY") {
+          setShowAuthModal('updatePassword');
+          // Очищаем хэш из URL, чтобы ссылка не использовалась повторно
+          if (window.history.replaceState) {
+            const cleanURL = window.location.href.split('#')[0];
+            window.history.replaceState(null, null, cleanURL);
+          } else {
+            window.location.hash = ''; 
           }
         }
-        setSession(session);
       }
     );
 
@@ -62,19 +64,37 @@ function App() {
       if (error && error.code !== 'PGRST116') throw error;
       setUserProfile(data || null);
     } catch (error) {
-      console.error('Ошибка при загрузке профиля:', error);
+      console.error('Ошибка при загрузке профиля пользователя:', error);
       setUserProfile(null);
     }
   };
 
-  const handleAuthOperation = async (authFunction, successMessage) => {
+  const handleLogin = async (credentials) => {
+    await handleAuthOperation(() => supabase.auth.signInWithPassword(credentials));
+  };
+
+  const handleSignup = async (credentials) => {
+    const { email, password, fullName, phone } = credentials;
+    await handleAuthOperation(() => supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName, phone: phone } },
+    }), 'signup');
+  };
+
+  const handleAuthOperation = async (authFunction, operationType = 'login') => {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const { error } = await authFunction();
+      const { data, error } = await authFunction();
       if (error) throw error;
+      
+      if (operationType === 'signup' && data.user && !data.session) {
+        alert('Регистрация почти завершена! Проверьте почту для подтверждения email.');
+      }
+      // При успешном входе или регистрации с авто-подтверждением, onAuthStateChange обновит сессию, 
+      // и модальное окно закроется.
       setShowAuthModal(false);
-      if (successMessage) alert(successMessage);
     } catch (error) {
       if (error.message.includes("User already registered")) {
         setAuthError('Пользователь с таким email уже зарегистрирован.');
@@ -86,19 +106,6 @@ function App() {
     } finally {
       setAuthLoading(false);
     }
-  };
-
-  const handleLogin = (credentials) => handleAuthOperation(() => supabase.auth.signInWithPassword(credentials));
-
-  const handleSignup = (credentials) => {
-    const { email, password, fullName, phone } = credentials;
-    const authFunction = () => supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, phone: phone } },
-    });
-    // Сообщение об успехе обрабатывается в AuthPage, так как оно разное
-    handleAuthOperation(authFunction, null); 
   };
 
   const handleLogout = async () => {
