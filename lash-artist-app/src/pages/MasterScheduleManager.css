@@ -1,276 +1,265 @@
 /* src/pages/MasterScheduleManager.css */
-.master-schedule-container {
-    padding: 2rem 1.5rem;
-    background-color: #FFFFFF;
-    border-radius: 12px;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.07);
-    overflow: hidden; /* Важно для анимаций */
-}
 
-.master-schedule-title {
-    font-family: 'Montserrat', sans-serif;
-    text-align: center;
-    font-size: 2.25rem;
-    color: #212121;
-    margin-bottom: 0.5rem;
-}
-
-.master-schedule-subtitle {
-    text-align: center;
-    color: #5E5C5B;
-    max-width: 600px;
-    margin: 0 auto 2.5rem auto;
-}
-
-.schedule-content-wrapper {
+/* --- ОСНОВНОЙ КОНТЕЙНЕР ДАШБОРДА --- */
+.master-dashboard {
     display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-}
-
-/* Стили для календаря и панели слотов */
-.calendar-panel {
-    background-color: #fdfdfd;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #f0efeb;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    max-width: 450px;
-    margin: 0 auto;
-}
-
-.react-calendar__tile.has-availability {
-    position: relative;
-}
-.react-calendar__tile.has-availability::after {
-    content: '';
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #FAD2E1;
-}
-.react-calendar__tile--active.has-availability::after {
-    background-color: #FFFFFF;
-}
-
-.slots-panel {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    flex-wrap: wrap; /* Добавлено для лучшей адаптивности */
     gap: 2rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 2rem auto;
+    background-color: #FBFBFB;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
 }
 
-.slots-panel-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 500;
-    color: #333;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #F0EFEB;
-    margin-bottom: 1.5rem;
-}
-
-.slots-list-section, .add-slot-section {
-    background-color: #fdfdfd;
+/* --- ЛЕВАЯ ПАНЕЛЬ: КАЛЕНДАРЬ --- */
+.dashboard-calendar-panel {
+    flex: 1 1 380px; /* Адаптивная ширина */
+    min-width: 320px;
+    background-color: #fff;
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid #f0efeb;
-}
-
-.slots-list {
-    list-style: none;
-    padding: 0;
-    max-height: 300px;
-    overflow-y: auto;
-    /* Стилизация скроллбара (опционально) */
-    scrollbar-width: thin;
-    scrollbar-color: #D4CFC7 #fdfdfd;
-}
-.slots-list::-webkit-scrollbar {
-  width: 8px;
-}
-.slots-list::-webkit-scrollbar-track {
-  background: #fdfdfd;
-}
-.slots-list::-webkit-scrollbar-thumb {
-  background-color: #D4CFC7;
-  border-radius: 10px;
-  border: 2px solid #fdfdfd;
-}
-
-
-.slot-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 8px;
-    background-color: #FFFFFF;
-    border: 1px solid #E0E0E0;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.slot-item:hover {
-    background-color: #F0EFEB;
-    transform: scale(1.02);
-}
-
-.slot-item.booked {
-    background-color: #f5f5f5;
-    border-color: #e0e0e0;
-    color: #9e9e9e;
-    transform: none; /* Убираем эффект ховера для забронированных */
-}
-
-.slot-time {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-.slot-status-booked {
-    font-size: 0.8rem;
-    font-style: italic;
-    color: #757575;
-}
-
-.delete-slot-btn {
-    background: transparent;
-    border: none;
-    color: #BDBDBD;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.delete-slot-btn:hover {
-    color: #D32F2F;
-    background-color: rgba(211, 47, 47, 0.1);
-}
-.delete-slot-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.no-slots-message {
-    color: #757575;
-    padding: 1rem 0;
-    text-align: center;
-    font-style: italic;
-}
-
-/* <<< СТИЛИ ДЛЯ СКЕЛЕТОНА >>> */
-.slot-item.skeleton {
-    background-color: #f5f5f5;
-    border-color: #eee;
-    pointer-events: none;
-}
-@keyframes skeleton-loading {
-    0% { background-color: #f5f5f5; }
-    50% { background-color: #e0e0e0; }
-    100% { background-color: #f5f5f5; }
-}
-.skeleton-text, .skeleton-icon {
-    height: 20px;
-    border-radius: 4px;
-    animation: skeleton-loading 1.5s infinite ease-in-out;
-}
-.skeleton-icon {
-    width: 20px;
-}
-
-
-/* Форма добавления слота */
-.add-slot-form {
+    border: 1px solid #f0f0f0;
+    align-self: flex-start;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
 }
-.form-row {
+
+/* --- ПРАВАЯ ПАНЕЛЬ: РАСПИСАНИЕ --- */
+.dashboard-schedule-panel {
+    flex: 2 1 600px; /* Занимает больше места */
+    min-width: 320px;
+}
+
+.schedule-panel-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #E0E0E0;
+}
+.schedule-panel-header h3 { font-size: 1rem; font-weight: 500; color: #5E5C5B; margin-bottom: 0.25rem; }
+.schedule-panel-header h2 { font-size: 2rem; font-weight: 600; color: #212121; margin: 0; }
+
+.schedule-items-list {
     display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0.25rem;
+    margin: 0 -0.25rem;
+}
+
+.empty-day-message { padding: 3rem 1rem; text-align: center; background-color: #f9f9f9; border-radius: 8px; }
+.empty-day-message p { font-size: 1.1rem; color: #757575; font-weight: 500; }
+
+/* --- СТИЛИЗАЦИЯ КАЛЕНДАРЯ --- */
+.dashboard-calendar-panel .react-calendar__tile.has-confirmed-booking { position: relative; font-weight: bold; }
+.dashboard-calendar-panel .react-calendar__tile.has-confirmed-booking::after { content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 24px; height: 4px; border-radius: 2px; background-color: #4caf50; }
+.dashboard-calendar-panel .react-calendar__tile.has-pending-booking::before { content: ''; position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background-color: #ffb74d; }
+.dashboard-calendar-panel .react-calendar__tile.has-slot { color: #5E5C5B; }
+
+/* --- ЭЛЕМЕНТЫ РАСПИСАНИЯ --- */
+.schedule-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-radius: 10px; background-color: #fff; border: 1px solid #f0f0f0; transition: all 0.2s ease-in-out; }
+.item-time { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.9rem; color: #424242; background-color: #f5f5f5; padding: 0.3rem 0.6rem; border-radius: 6px; min-width: 60px; text-align: center; }
+.item-details { flex-grow: 1; }
+.item-title { font-weight: 600; color: #212121; margin: 0; }
+.item-subtitle { font-size: 0.85rem; color: #757575; margin: 0; }
+.item-actions { display: flex; gap: 0.5rem; position: relative; } /* <<< ИСПРАВЛЕНО: Добавлено position: relative */
+.item-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; transition: all 0.2s; }
+.item-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.booking-item.status-pending { border-left: 4px solid #ffb74d; }
+.booking-item.status-confirmed { border-left: 4px solid #4caf50; }
+.item-btn.confirm { background-color: #e8f5e9; color: #1b5e20; }
+.item-btn.confirm:hover { background-color: #4caf50; color: white; }
+.item-btn.cancel { background-color: #ffebee; color: #b71c1c; }
+.item-btn.cancel:hover { background-color: #f44336; color: white; }
+.item-btn.more { background-color: #f5f5f5; color: #757575; }
+.item-btn.more:hover { background-color: #e0e0e0; }
+
+/* <<< ИСПРАВЛЕНИЕ: Стили для выпадающего меню действий >>> */
+.actions-menu-wrapper { position: relative; }
+.actions-menu {
+    position: absolute;
+    /* УДАЛИ top: 100%; */
+    bottom: 120%; /* <<< ИЗМЕНЕНО: Появляется СВЕРХУ кнопки */
+    right: 0;
+    margin-top: 0; /* УДАЛИ margin-top: 8px; */
+    margin-bottom: 8px; /* <<< ДОБАВЛЕНО: небольшой отступ снизу */
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid #eee;
+    z-index: 10;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+}
+
+.actions-menu button {
+    background: none;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+.actions-menu button:hover {
+    background-color: #f5f5f5;
+}
+.actions-menu button:first-child {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.availability-item { background-color: #f9f9f9; border-style: dashed; }
+.availability-item .item-title { color: #757575; font-style: italic; }
+.availability-item .item-time { min-width: 120px; }
+.item-btn.delete { background-color: #f5f5f5; color: #9e9e9e; }
+.item-btn.delete:hover { background-color: #ef5350; color: white; }
+
+/* --- ФОРМА ДОБАВЛЕНИЯ СЛОТА --- */
+.add-slot-form-v2 { display: flex; gap: 1rem; align-items: center; padding: 1rem; margin-top: 1.5rem; background-color: #f9f9f9; border: 1px dashed #e0e0e0; border-radius: 10px; }
+.form-v2-inputs { display: flex; align-items: center; gap: 0.5rem; }
+.form-v2-inputs input[type="time"] { padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; }
+.form-v2-inputs span { font-weight: 600; color: #757575; }
+.add-slot-btn-v2 { background-color: #FAD2E1; color: #424242; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+.add-slot-btn-v2:hover:not(:disabled) { background-color: #E2BCC7; color: white; }
+.add-slot-btn-v2:disabled { background-color: #e0e0e0; cursor: not-allowed; }
+
+/* --- КНОПКА И МОДАЛКА АРХИВА --- */
+.archive-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.8rem; margin-top: 1rem; border-radius: 8px; border: 1px solid #e0e0e0; background-color: #f9f9f9; cursor: pointer; transition: all 0.2s; font-weight: 600; color: #5E5C5B; }
+.archive-button:hover { background-color: #F0EFEB; border-color: #D4CFC7; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.modal-content { background-color: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 700px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #eee; }
+.modal-header h3 { margin: 0; font-size: 1.25rem; }
+.modal-close-btn { background: none; border: none; font-size: 2rem; line-height: 1; cursor: pointer; color: #9e9e9e; }
+.modal-body { padding: 1.5rem; overflow-y: auto; }
+
+.archive-list { display: flex; flex-direction: column; gap: 1rem; }
+.archive-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 8px; background: #f9f9f9; border-left: 4px solid #BDBDBD; }
+.archive-item.status-cancelled { border-left-color: #f44336; }
+.archive-item-info { display: flex; flex-direction: column; }
+.archive-item-info span { font-size: 0.9rem; color: #5E5C5B; }
+.archive-item-status { font-weight: 600; font-size: 0.85rem; }
+
+.cancellation-form { display: flex; flex-direction: column; gap: 1rem; }
+.cancellation-form textarea { width: 100%; min-height: 100px; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 1rem; }
+.confirm-cancellation-btn { align-self: flex-end; background-color: #f44336; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.confirm-cancellation-btn:disabled { background-color: #e0e0e0; }
+
+@media (max-width: 768px) {
+    .master-dashboard { flex-direction: column; padding: 1rem; margin: 1rem; }
+    .schedule-item { flex-direction: column; align-items: flex-start; }
+    .item-actions { margin-top: 0.75rem; width: 100%; justify-content: flex-end; }
+}
+
+/* Добавить в конец src/pages/MasterScheduleManager.css */
+
+.add-slot-form-v2 {
+    display: flex;
+    flex-wrap: wrap; /* Для мобильных */
     gap: 1.5rem;
     align-items: center;
-}
-.add-slot-form .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    flex-grow: 1;
-}
-.add-slot-form .form-group label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #424242;
-}
-.add-slot-form .form-group input {
-    padding: 0.75rem;
-    border: 1px solid #D4CFC7;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-family: 'Open Sans', sans-serif;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.add-slot-form .form-group input:focus {
-    outline: none;
-    border-color: #FAD2E1;
-    box-shadow: 0 0 0 2px rgba(250, 210, 225, 0.3);
+    padding: 1rem;
+    margin-top: 1.5rem;
+    background-color: #f9f9f9;
+    border: 1px dashed #e0e0e0;
+    border-radius: 10px;
 }
 
-.add-slot-btn {
+.form-v2-inputs, .form-v2-presets {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.form-v2-inputs label, .form-v2-presets label {
+    font-weight: 600;
+    color: #5E5C5B;
+    font-size: 0.9rem;
+}
+
+.form-v2-inputs input[type="time"] {
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.form-v2-presets button {
     background-color: #FAD2E1;
     color: #424242;
     border: none;
-    padding: 0.8rem 1.5rem;
+    padding: 0.7rem 1rem;
     border-radius: 8px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    align-self: flex-start;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    transition: all 0.2s;
 }
-.add-slot-btn:hover:not(:disabled) {
+.form-v2-presets button:hover:not(:disabled) {
     background-color: #E2BCC7;
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    color: white;
 }
-.add-slot-btn:disabled {
-    background-color: #E0E0E0;
+.form-v2-presets button:disabled {
+    background-color: #e0e0e0;
     cursor: not-allowed;
-    color: #9e9e9e;
 }
 
-/* <<< СТИЛИ ДЛЯ ПРЕДУПРЕЖДЕНИЯ О НЕВАЛИДНОМ ВРЕМЕНИ >>> */
-.time-error-notice {
-    font-size: 0.85rem;
-    color: #D32F2F;
+/* Добавить или обновить в src/pages/MasterScheduleManager.css */
+
+/* Стили для перерыва */
+.availability-item.break-item {
+    background-color: #f5f5f5;
+    color: #757575;
+    border-style: solid;
+    border-color: #e0e0e0;
+}
+.availability-item.break-item .item-title {
+    font-style: normal;
     font-weight: 500;
-    margin-top: -0.5rem;
 }
 
-
-@media (min-width: 992px) {
-    .schedule-content-wrapper {
-        flex-direction: row;
-        align-items: flex-start;
-    }
-    .calendar-panel {
-        max-width: 400px;
-        flex-shrink: 0;
-    }
+/* Стили для формы с перерывами */
+.add-slot-form-v2 {
+    /* ... существующие стили ... */
+    border-top: 1px solid #e0e0e0;
+    margin-top: auto; /* Прижимаем к низу */
+    padding-top: 1.5rem;
+    background: #fff;
 }
+.break-presets button {
+    background-color: #e0e0e0;
+    color: #424242;
+}
+.break-presets button:hover:not(:disabled) {
+    background-color: #bdbdbd;
+}
+
+/* Стили для портала меню */
+.actions-menu-portal {
+    position: fixed; /* Важно для портала */
+    transform: translate(-50%, -100%); /* Центрируем и поднимаем над точкой */
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    border: 1px solid #eee;
+    z-index: 1010; /* Выше всего остального */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+}
+.actions-menu-portal button {
+    background: none; border: none; padding: 0.7rem 1.2rem;
+    text-align: left; cursor: pointer; font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+.actions-menu-portal button:hover { background-color: #f5f5f5; }
+.actions-menu-portal button:first-child { border-bottom: 1px solid #f0f0f0; }
