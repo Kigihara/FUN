@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient';
 import BookingCalendar from './BookingCalendar';
 import './ServiceList.css';
 import './BookingModal.css'; 
+import { format } from 'date-fns';
+import { toast } from 'react-hot-toast';
 
 const ClockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="details-icon">
@@ -111,11 +113,11 @@ function ServiceList({ userProfile, session }) {
 
   const handleBookingConfirm = async () => {
     if (!clientName.trim() || !clientPhone.trim()) {
-        alert('Пожалуйста, заполните ваше имя и телефон.');
+        toast.error('Пожалуйста, заполните ваше имя и телефон.');
         return;
     }
     if (!finalSelectedDate || !finalSelectedTime || !selectedServiceForBooking) {
-        alert('Пожалуйста, выберите услугу, дату и время для записи.');
+        toast.error('Пожалуйста, выберите услугу, дату и время для записи.');
         return;
     }
 
@@ -123,26 +125,24 @@ function ServiceList({ userProfile, session }) {
 
     const bookingEndTime = calculateEndTime(finalSelectedTime, selectedServiceForBooking.duration_minutes);
     if (!bookingEndTime) {
-        alert('Не удалось рассчитать время окончания услуги.');
+        toast.error('Не удалось рассчитать время окончания услуги.');
         setIsSubmitting(false);
         return;
     }
 
     const bookingData = {
       service_id: selectedServiceForBooking.id,
+      user_id: session?.user?.id || null, // Более безопасное присвоение
       client_name: clientName.trim(),
       client_phone: clientPhone.trim(),
-      booking_date: finalSelectedDate.toISOString().split('T')[0], 
-      booking_start_time: `${finalSelectedTime}:00`, 
+      client_email: session?.user?.email || null,
+      booking_date: format(finalSelectedDate, 'yyyy-MM-dd'), // Используем date-fns для надежности
+      booking_start_time: `${finalSelectedTime}:00`, // <<< ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
       booking_end_time: bookingEndTime,
       duration_minutes: selectedServiceForBooking.duration_minutes,
       price: selectedServiceForBooking.price,
       status: 'pending', 
     };
-    
-    if (session && session.user) {
-      bookingData.user_id = session.user.id; 
-    }
     
     console.log("Отправка данных бронирования в Supabase:", bookingData);
 
@@ -154,15 +154,15 @@ function ServiceList({ userProfile, session }) {
 
       if (error) {
         console.error('Ошибка при создании бронирования в Supabase:', error);
-        alert(`Не удалось создать запись: ${error.message}`);
+        toast.error(`Не удалось создать запись: ${error.message}`);
       } else {
         console.log('Бронирование успешно создано в Supabase:', data);
-        alert('Ваша заявка на запись принята! Мастер свяжется с вами для подтверждения.');
+        toast.success('Ваша заявка на запись принята! Мастер свяжется с вами для подтверждения.');
         handleCloseBookingModal(); 
       }
     } catch (err) {
       console.error('Неожиданная ошибка при попытке бронирования:', err);
-      alert('Произошла неожиданная ошибка. Пожалуйста, попробуйте снова.');
+      toast.error('Произошла неожиданная ошибка. Пожалуйста, попробуйте снова.');
     } finally {
       setIsSubmitting(false);
     }

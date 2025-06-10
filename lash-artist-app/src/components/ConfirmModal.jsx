@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion'; // Убираем AnimatePresence
 import './ConfirmModal.css';
 
 function ConfirmModal({ isOpen, title, children, onConfirm, onCancel, confirmText = 'Подтвердить', cancelText = 'Отмена' }) {
-    if (!isOpen) {
-        return null;
-    }
+  if (!isOpen) {
+    return null;
+  }
 
     return ReactDOM.createPortal(
         <motion.div

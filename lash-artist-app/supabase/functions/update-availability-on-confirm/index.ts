@@ -29,13 +29,14 @@ Deno.serve(async (req) => {
     console.log(`Date: ${booking.booking_date}, Start: ${booking.booking_start_time}, End: ${booking.booking_end_time}`);
 
     // Ищем подходящий слот в таблице availability
-    const { data: availableSlots, error: slotError } = await supabaseAdmin
-      .from('availability')
-      .select('id')
-      .eq('date', booking.booking_date)
-      .gte('end_time', booking.booking_end_time)
-      .lte('start_time', booking.booking_start_time)
-      .eq('is_booked', false);
+            // Ищем любой слот, который ПЕРЕСЕКАЕТСЯ с временем бронирования
+            const { data: availableSlots, error: slotError } = await supabaseAdmin
+            .from('availability')
+            .select('id')
+            .eq('date', booking.booking_date)
+            .lt('start_time', booking.booking_end_time) // Слот должен начинаться ДО того, как бронь закончится
+            .gt('end_time', booking.booking_start_time)   // Слот должен заканчиваться ПОСЛЕ того, как бронь начнется
+            .eq('is_booked', false);
 
     if (slotError) throw slotError;
     
